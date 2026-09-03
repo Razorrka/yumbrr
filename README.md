@@ -3,7 +3,10 @@
 A small studio for writing poems in the note-card format: a grainy photograph, a
 few quiet lines, two or three words in link blue, initials in the corner.
 
-**Open `index.html` in a browser.** No install, no build step, no server, no
+**[Open the app →](https://claude.ai/code/artifact/8b578ee9-b49c-42f8-a79f-4200c4b67415)**
+
+Or run it yourself: open `index.html` in a browser, or grab the single file
+`dist/yumbrr.html` and open that. No install, no build step, no server, no
 account. Everything stays on your machine.
 
 ![the format](docs/example.png)
@@ -78,12 +81,26 @@ js/film.js      grain, fade, warmth, vignette
 js/craft.js     the guide, the sparks, the draft notes
 js/store.js     local shelf + export/import
 js/app.js       wiring
+tools/bundle.py inlines it all into dist/
+dist/yumbrr.html   the whole app in one file
+dist/embed.html    body-only, for hosts that supply the document shell
 CRAFT.md        how to write the words
 ```
+
+Run `python3 tools/bundle.py` after changing anything in `css/` or `js/` to
+rebuild `dist/`.
 
 `js/card.js` is the single renderer — the live preview, the shelf thumbnails and
 the exported PNG all run through the same function, which is why they can't
 drift apart.
+
+## A note on saving
+
+Opened from disk, **Save PNG** and **Export shelf** download straight away.
+Embedded in a host that blocks page-started downloads, the app asks the host to
+save the file for you, and if that isn't available either it hands you the image
+on-page to long-press or right-click. Same button, three routes — you never end
+up with a control that quietly does nothing.
 
 ## Browser support
 

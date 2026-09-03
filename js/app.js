@@ -19,6 +19,10 @@
   var lastFrame = null;  // geometry from the most recent paint, for hit-testing
 
   var card = $('#card'), ctx = card.getContext('2d');
+
+  /* Framed hosts (an embedded viewer) make script-started downloads inert, so
+     there the file is handed over on-page instead of through a download. */
+  var FRAMED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
   var leftPane = 'write', mobileCard = false;
   var desktop = function () { return window.matchMedia('(min-width:861px)').matches; };
 
@@ -28,6 +32,72 @@
     var t = $('#toast');
     t.textContent = msg; t.classList.add('is-on');
     clearTimeout(toast._t); toast._t = setTimeout(function () { t.classList.remove('is-on'); }, 2200);
+  }
+
+  var sheet = $('#sheet');
+  function openSheet(title, hint, node, copyText) {
+    $('#sheetTitle').textContent = title;
+    $('#sheetHint').textContent = hint;
+    var body = $('#sheetBody'); body.innerHTML = ''; body.appendChild(node);
+    var copy = $('#sheetCopy');
+    copy.hidden = !copyText;
+    copy.onclick = function () {
+      if (navigator.clipboard) navigator.clipboard.writeText(copyText).then(function () { toast('Copied'); });
+    };
+    sheet.classList.add('is-on');
+  }
+  function closeSheet() { sheet.classList.remove('is-on'); $('#sheetBody').innerHTML = ''; }
+  $('#sheetClose').addEventListener('click', closeSheet);
+  sheet.addEventListener('click', function (e) { if (e.target === sheet) closeSheet(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSheet(); });
+
+  /* A framed host won't let the page start a download, but it may offer a
+     save capability instead. Ask once, and keep the on-page sheet for when
+     neither route is open. */
+  var savedNS, savedAsked = false;
+  function saveApi() {
+    if (savedAsked) return Promise.resolve(savedNS);
+    savedAsked = true;
+    if (!window.claude || !window.claude.use) return Promise.resolve(null);
+    return window.claude.use('downloads').then(
+      function (ns) { savedNS = ns; return ns; },
+      function () { return null; }
+    );
+  }
+
+  function sheetFallback(o) {
+    if (o.kind === 'image') {
+      var im = new Image();
+      im.src = o.url || URL.createObjectURL(o.blob); im.alt = o.name;
+      openSheet(o.name, 'Right-click the image and choose Save image as — or long-press it on a phone.', im);
+    } else {
+      var ta = document.createElement('textarea'); ta.readOnly = true; ta.value = o.text;
+      openSheet(o.name, 'Copy this and save it as ' + o.name + '. Import brings it back.', ta, o.text);
+    }
+  }
+
+  /* One place decides how a finished file reaches the user. */
+  function deliver(o) {
+    if (!FRAMED) {
+      var url = o.url || URL.createObjectURL(o.blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = o.name;
+      document.body.appendChild(a); a.click(); a.remove();
+      if (!o.url) setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      toast('Saved ' + o.name);
+      return;
+    }
+    saveApi().then(function (api) {
+      if (!api) { sheetFallback(o); return; }
+      api.save({ filename: o.name, data: o.blob || o.text }).then(
+        function (r) { toast(r.status === 'delivered' ? 'Sent ' + o.name : 'Saved ' + o.name); },
+        function (err) {
+          if (err && err.code === 'declined') return;                 // they said no
+          if (err && err.code === 'rate_limited') { toast('One save at a time — try again in a moment.'); return; }
+          sheetFallback(o);
+        }
+      );
+    });
   }
 
   function applyPanes() {
@@ -272,15 +342,11 @@
       photo: hi, focusX: state.focusX, focusY: state.focusY
     });
     var name = slug(Store.title(state.text)) + '.png';
-    var done = function (url, revoke) {
-      var a = document.createElement('a');
-      a.href = url; a.download = name;
-      document.body.appendChild(a); a.click(); a.remove();
-      if (revoke) setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
-      toast('Saved ' + name);
-    };
-    if (cv.toBlob) cv.toBlob(function (b) { b ? done(URL.createObjectURL(b), true) : done(cv.toDataURL('image/png')); }, 'image/png');
-    else done(cv.toDataURL('image/png'));
+    if (cv.toBlob) cv.toBlob(function (b) {
+      deliver(b ? { name: name, kind: 'image', blob: b }
+                : { name: name, kind: 'image', url: cv.toDataURL('image/png') });
+    }, 'image/png');
+    else deliver({ name: name, kind: 'image', url: cv.toDataURL('image/png') });
   }
   $('#pngBtn').addEventListener('click', exportPNG);
 
@@ -377,12 +443,9 @@
   }
 
   $('#exportAll').addEventListener('click', function () {
-    var blob = new Blob([Store.exportAll()], { type: 'application/json' });
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob); a.download = 'yumbrr-shelf.json';
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
-    toast('Shelf exported');
+    var text = Store.exportAll();
+    deliver({ name: 'yumbrr-shelf.json', kind: 'text', text: text,
+              blob: new Blob([text], { type: 'application/json' }) });
   });
   $('#importAll').addEventListener('click', function () { $('#importFile').click(); });
   $('#importFile').addEventListener('change', function () {

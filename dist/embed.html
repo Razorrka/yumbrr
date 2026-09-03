@@ -1,0 +1,1617 @@
+<title>yumbrr</title>
+<style>
+/* yumbrr — chrome is quiet so the card is the only loud thing */
+:root{
+  --bg:#f2f0ed; --panel:#fbfaf9; --line:#e2ded8; --line2:#eeebe6;
+  --ink:#1b1a19; --ink2:#6d6862; --ink3:#9a948c;
+  --blue:#3a66bd; --blue-soft:#eaf0fb;
+  --radius:10px;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --bar:56px;
+}
+/* Three theme states, not two: an explicit stamp either way, plus the
+   un-stamped default where only the OS preference speaks. */
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#191817; --panel:#221f1e; --line:#332f2d; --line2:#2b2826;
+    --ink:#eeeae5; --ink2:#a49d95; --ink3:#726b64;
+    --blue:#7fa2e8; --blue-soft:#22293a;
+  }
+}
+:root[data-theme="dark"]{
+    --bg:#191817; --panel:#221f1e; --line:#332f2d; --line2:#2b2826;
+    --ink:#eeeae5; --ink2:#a49d95; --ink3:#726b64;
+    --blue:#7fa2e8; --blue-soft:#22293a;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}   /* beats .film{display:flex} etc. */
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:15px/1.5 var(--sans);
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  overflow:hidden;
+}
+h1,h2,h3,p{margin:0}
+button,input,textarea,select{font:inherit;color:inherit}
+.ic{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ── bar ── */
+.bar{
+  height:var(--bar); display:flex; align-items:center; gap:14px;
+  padding:0 14px; border-bottom:1px solid var(--line); background:var(--panel);
+  position:relative; z-index:5;
+}
+.brand{display:flex;align-items:center;gap:9px;min-width:0}
+.brand h1{font-size:16px;font-weight:620;letter-spacing:-.02em}
+.mark{
+  width:20px;height:26px;border:1.5px solid var(--ink3);border-radius:2px;
+  position:relative;flex:none;
+}
+.mark::before{content:"";position:absolute;inset:2px 2px auto 2px;height:9px;background:var(--ink3);opacity:.55}
+.mark::after{content:"";position:absolute;left:2px;right:7px;bottom:3px;height:2px;background:var(--blue)}
+.tabs{display:flex;gap:2px;margin-left:6px}
+.tab{
+  border:0;background:none;padding:7px 12px;border-radius:99px;cursor:pointer;
+  color:var(--ink2);font-size:14px;font-weight:520;
+}
+.tab:hover{color:var(--ink);background:var(--line2)}
+.tab.is-on{background:var(--ink);color:var(--panel)}
+.bar-end{margin-left:auto;display:flex;gap:8px;align-items:center}
+
+.btn{
+  border:1px solid transparent;background:var(--ink);color:var(--panel);
+  padding:8px 14px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:540;
+  display:inline-flex;align-items:center;gap:6px;line-height:1;
+  transition:opacity .12s,background .12s,border-color .12s;
+}
+.btn:hover{opacity:.86}
+.btn:active{transform:translateY(.5px)}
+.btn.ghost{background:transparent;color:var(--ink2);border-color:var(--line)}
+.btn.ghost:hover{color:var(--ink);border-color:var(--ink3);opacity:1}
+.btn.tiny{padding:6px 10px;font-size:13px;border-radius:7px}
+.sel{
+  background:transparent;border:1px solid var(--line);border-radius:7px;
+  padding:7px 8px;font-size:13px;color:var(--ink2);cursor:pointer;
+}
+
+/* ── stage ── */
+.stage{
+  height:calc(100% - var(--bar));
+  display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+}
+.pane{display:none;min-height:0;min-width:0}
+.pane.is-on{display:block}
+.pane-write,.pane-craft,.pane-shelf{border-right:1px solid var(--line);background:var(--panel)}
+.scroll{height:100%;overflow-y:auto;overscroll-behavior:contain;padding:20px 20px 80px}
+.scroll::-webkit-scrollbar{width:9px}
+.scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:9px;border:3px solid var(--panel)}
+
+.block{max-width:620px;margin:0 auto 26px}
+.block-head{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.block-head h2{font-size:12px;font-weight:640;letter-spacing:.09em;text-transform:uppercase;color:var(--ink2)}
+.hint{font-size:12.5px;color:var(--ink3)}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row.gap{margin-top:14px}
+
+/* ── photo drop ── */
+.drop{
+  border:1.5px dashed var(--line);border-radius:var(--radius);background:var(--bg);
+  padding:26px 18px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;
+}
+.drop:hover,.drop:focus-visible,.drop.hot{border-color:var(--blue);background:var(--blue-soft);outline:none}
+.drop-in{display:flex;flex-direction:column;align-items:center;gap:7px;color:var(--ink2)}
+.drop-in .ic{width:26px;height:26px;stroke-width:1.3;color:var(--ink3)}
+.drop-in p{font-size:14px}
+.drop-in small{font-size:12.5px;color:var(--ink3)}
+
+.film{margin-top:14px;display:flex;flex-direction:column;gap:9px}
+.looks{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:3px}
+.look{
+  border:1px solid var(--line);background:transparent;color:var(--ink2);
+  padding:6px 11px;border-radius:99px;font-size:13px;cursor:pointer;
+}
+.look:hover{border-color:var(--ink3);color:var(--ink)}
+.look.is-on{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.sl{display:grid;grid-template-columns:66px 1fr 38px;align-items:center;gap:10px;font-size:13px;color:var(--ink2)}
+.sl i{font-style:normal;font-variant-numeric:tabular-nums;color:var(--ink3);font-size:12px;text-align:right}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;background:transparent;height:18px;width:100%;cursor:pointer;
+}
+input[type=range]::-webkit-slider-runnable-track{height:3px;background:var(--line);border-radius:3px}
+input[type=range]::-moz-range-track{height:3px;background:var(--line);border-radius:3px}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--ink);
+  margin-top:-5.5px;border:0;
+}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--ink);border:0}
+.film-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:4px}
+.film-foot small{font-size:12px;color:var(--ink3)}
+.film-btns{display:flex;gap:6px;flex:none}
+
+/* ── editor ── */
+.ed-tools{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.ed-count{margin-left:auto;font-size:12px;color:var(--ink3);font-variant-numeric:tabular-nums}
+#text{
+  width:100%;min-height:210px;resize:vertical;
+  border:1px solid var(--line);border-radius:var(--radius);background:var(--bg);
+  padding:14px 15px;font-size:15.5px;line-height:1.85;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+#text:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft)}
+#text::placeholder{color:var(--ink3)}
+
+.thread{
+  margin-top:12px;padding:12px 14px;border-radius:var(--radius);
+  background:var(--blue-soft);border:1px solid transparent;min-height:0;
+}
+.thread:empty{display:none}
+.thread b{display:block;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--blue);margin-bottom:6px;font-weight:640}
+.thread .tw{color:var(--blue);font-size:15px}
+.thread .sep{color:var(--ink3);padding:0 5px}
+.thread .none{color:var(--ink3);font-size:13.5px}
+
+.notes{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.note{
+  font-size:13px;color:var(--ink2);padding:8px 11px;border-radius:8px;
+  background:var(--bg);border-left:2px solid var(--ink3);
+}
+.note.warn{border-left-color:#c98a2e}
+
+.fld{display:flex;flex-direction:column;gap:5px;flex:1;min-width:150px}
+.fld span{font-size:12px;color:var(--ink2)}
+.fld input{
+  border:1px solid var(--line);border-radius:8px;background:var(--bg);
+  padding:9px 11px;font-size:14px;
+}
+.fld input:focus{outline:none;border-color:var(--blue)}
+.chk{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13.5px;color:var(--ink2);cursor:pointer}
+.chk input{accent-color:var(--blue);width:15px;height:15px}
+
+/* ── card pane ── */
+.pane-card{background:var(--bg)}
+.card-wrap{height:100%;display:flex;flex-direction:column;padding:18px 18px 14px;gap:12px}
+.card-hold{
+  flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
+}
+#card{
+  max-width:100%;max-height:100%;
+  box-shadow:0 1px 2px rgba(0,0,0,.07),0 12px 34px rgba(0,0,0,.11);
+  border-radius:2px; cursor:pointer; touch-action:none;
+}
+.card-foot{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.tip{font-size:12.5px;color:var(--ink3)}
+.card-acts{margin-left:auto;display:flex;gap:8px;align-items:center}
+
+/* ── shelf ── */
+.shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:12px}
+.shelf .empty{grid-column:1/-1;color:var(--ink3);font-size:13.5px;padding:22px 0;text-align:center}
+.item{
+  border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--bg);
+  cursor:pointer;position:relative;transition:border-color .12s,transform .12s;
+}
+.item:hover{border-color:var(--ink3);transform:translateY(-1px)}
+.item.is-on{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-soft)}
+.item canvas{display:block;width:100%;height:auto}
+.item .meta{padding:7px 9px;font-size:12px;color:var(--ink2);border-top:1px solid var(--line2)}
+.item .meta b{display:block;font-weight:540;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .meta span{color:var(--ink3);font-size:11px}
+.item .del{
+  position:absolute;top:5px;right:5px;width:22px;height:22px;border-radius:6px;
+  border:0;background:rgba(0,0,0,.55);color:#fff;cursor:pointer;font-size:14px;line-height:1;
+  opacity:0;transition:opacity .12s;
+}
+.item:hover .del{opacity:1}
+
+/* ── craft prose ── */
+.prose{max-width:660px;margin:0 auto;padding-bottom:20px}
+.prose h2{font-size:20px;letter-spacing:-.02em;margin:30px 0 8px;font-weight:640}
+.prose h2:first-child{margin-top:0}
+.prose h3{font-size:15px;margin:22px 0 5px;font-weight:620}
+.prose p{margin:0 0 11px;color:var(--ink2);font-size:14.5px;line-height:1.66}
+.prose .lede{font-size:16px;color:var(--ink);line-height:1.6}
+.prose ul{margin:0 0 12px;padding-left:19px;color:var(--ink2);font-size:14.5px;line-height:1.66}
+.prose li{margin-bottom:5px}
+.prose em{color:var(--ink);font-style:italic}
+.prose .ex{
+  margin:8px 0 14px;padding:11px 14px;border-left:2px solid var(--line);
+  font-size:14.5px;line-height:1.75;color:var(--ink);white-space:pre-line;
+}
+.prose .ex .b{color:var(--blue)}
+.prose .rule{
+  margin:10px 0 16px;padding:10px 13px;background:var(--bg);border-radius:8px;
+  font-size:13.5px;color:var(--ink);
+}
+.prose .rule b{font-weight:620}
+.move{border-top:1px solid var(--line2);padding-top:16px;margin-top:18px}
+.move .n{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);font-weight:640}
+.sparks{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 6px}
+.spark{
+  border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-size:13.5px;
+  background:var(--bg);color:var(--ink);
+}
+.spark b{color:var(--blue);font-weight:500}
+
+/* ── toast ── */
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translate(-50%,14px);
+  background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:99px;
+  font-size:13.5px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:50;
+}
+.toast.is-on{opacity:1;transform:translate(-50%,0)}
+
+/* ── small screens ── */
+@media (max-width:860px){
+  .stage{grid-template-columns:1fr}
+  .pane-write,.pane-craft,.pane-shelf{border-right:0}
+  .pane-card{display:none}
+  .pane-card.is-on{display:block}
+  .tabs .tab[data-pane="card"]{display:inline-block}
+  .scroll{padding:16px 14px 90px}
+  .bar{padding:0 10px;gap:8px}
+  .brand h1{display:none}
+  .tab{padding:7px 10px;font-size:13.5px}
+  .card-wrap{padding:14px}
+}
+@media (min-width:861px){ .tab[data-pane="card"]{display:none} }
+
+
+/* ── save sheet — framed hosts make script-started downloads inert ── */
+.sheet{
+  position:fixed;inset:0;z-index:60;display:none;
+  background:rgba(20,18,17,.72);padding:24px;overflow:auto;
+}
+.sheet.is-on{display:flex;align-items:flex-start;justify-content:center}
+.sheet-in{
+  background:var(--panel);border-radius:12px;padding:16px;max-width:560px;width:100%;
+  display:flex;flex-direction:column;gap:12px;box-shadow:0 20px 60px rgba(0,0,0,.34);
+}
+.sheet-in h3{font-size:14px;font-weight:620;color:var(--ink)}
+.sheet-in p{font-size:13px;color:var(--ink2);margin:0}
+.sheet-in img{width:100%;height:auto;border-radius:4px;display:block;background:var(--bg)}
+.sheet-in textarea{
+  width:100%;height:170px;resize:vertical;border:1px solid var(--line);border-radius:8px;
+  background:var(--bg);color:var(--ink);padding:10px;
+  font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+.sheet-act{display:flex;gap:8px;align-items:center}
+.sheet-act .sp{margin-left:auto}
+
+</style>
+<header class="bar">
+  <div class="brand">
+    <span class="mark"></span>
+    <h1>yumbrr</h1>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button class="tab is-on" data-pane="write" role="tab">Write</button>
+    <button class="tab" data-pane="craft" role="tab">Craft</button>
+    <button class="tab" data-pane="shelf" role="tab">Shelf</button>
+  </nav>
+  <div class="bar-end">
+    <button class="btn ghost" id="newBtn" title="Start a new poem">New</button>
+    <button class="btn" id="saveBtn" title="Save to your shelf (⌘S)">Save</button>
+  </div>
+</header>
+
+<main class="stage">
+
+  <!-- ───────────── WRITE ───────────── -->
+  <section class="pane pane-write is-on" data-pane="write">
+    <div class="scroll">
+
+      <div class="block">
+        <div class="block-head">
+          <h2>Photograph</h2>
+          <span class="hint">the room they left, not the person</span>
+        </div>
+        <div class="drop" id="drop" tabindex="0">
+          <input type="file" id="file" accept="image/*" hidden>
+          <div class="drop-in">
+            <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M3 17l5-6 4 4.5L15.5 12 21 18M3 5h18v14H3z"/></svg>
+            <p><strong>Drop a photo</strong>, click, or paste</p>
+            <small>Blurry and badly lit is correct.</small>
+          </div>
+        </div>
+        <div class="film" id="film" hidden>
+          <div class="looks" id="looks"></div>
+          <label class="sl"><span>Grain</span><input type="range" id="grain" min="0" max="100" value="46"><i></i></label>
+          <label class="sl"><span>Fade</span><input type="range" id="fade" min="0" max="100" value="22"><i></i></label>
+          <label class="sl"><span>Warmth</span><input type="range" id="warmth" min="-50" max="50" value="14"><i></i></label>
+          <label class="sl"><span>Light</span><input type="range" id="exposure" min="-50" max="50" value="0"><i></i></label>
+          <label class="sl"><span>Vignette</span><input type="range" id="vignette" min="0" max="100" value="34"><i></i></label>
+          <div class="film-foot">
+            <small>Drag the photo in the card to reframe it.</small>
+            <span class="film-btns">
+              <button class="btn tiny ghost" id="swapPhoto">Replace</button>
+              <button class="btn tiny ghost" id="clearPhoto">Remove</button>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-head">
+          <h2>The poem</h2>
+          <span class="hint">blank line = stanza</span>
+        </div>
+        <div class="ed-tools">
+          <button class="btn tiny" id="linkBtn" title="Make the selected words blue (⌘K)">
+            <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg>
+            Blue
+          </button>
+          <span class="ed-count" id="count"></span>
+        </div>
+        <textarea id="text" spellcheck="true" placeholder="I was never good&#10;at being [human].&#10;&#10;teach me how to be [seventeen]&#10;on the floor of someone else's bedroom."></textarea>
+        <div class="thread" id="thread"></div>
+        <div class="notes" id="notes"></div>
+      </div>
+
+      <div class="block">
+        <div class="block-head"><h2>Signature</h2></div>
+        <div class="row">
+          <label class="fld"><span>Initials</span><input type="text" id="attrib" maxlength="12" placeholder="your initials"></label>
+          <label class="fld"><span>Handle</span><input type="text" id="handle" maxlength="28" placeholder="optional watermark"></label>
+        </div>
+        <label class="chk"><input type="checkbox" id="glyph" checked><span>Show the little page mark</span></label>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ───────────── CRAFT ───────────── -->
+  <section class="pane pane-craft" data-pane="craft">
+    <div class="scroll">
+      <div class="prose" id="craftBody"></div>
+    </div>
+  </section>
+
+  <!-- ───────────── SHELF ───────────── -->
+  <section class="pane pane-shelf" data-pane="shelf">
+    <div class="scroll">
+      <div class="block">
+        <div class="block-head">
+          <h2>Shelf</h2>
+          <span class="hint" id="shelfCount"></span>
+        </div>
+        <div class="shelf" id="shelf"></div>
+        <div class="row gap">
+          <button class="btn tiny ghost" id="exportAll">Export shelf (.json)</button>
+          <button class="btn tiny ghost" id="importAll">Import…</button>
+          <input type="file" id="importFile" accept="application/json" hidden>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────── CARD ───────────── -->
+  <aside class="pane pane-card is-on" data-pane="card">
+    <div class="card-wrap">
+      <div class="card-hold">
+        <canvas id="card" aria-label="Poem card preview"></canvas>
+      </div>
+      <div class="card-foot">
+        <span class="tip">Tap a word to turn it blue.</span>
+        <div class="card-acts">
+          <select id="size" class="sel" title="Export width">
+            <option value="1080">1080</option>
+            <option value="1440" selected>1440</option>
+            <option value="2160">2160</option>
+          </select>
+          <button class="btn" id="pngBtn">Save PNG</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+</main>
+
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="sheet-in">
+    <h3 id="sheetTitle"></h3>
+    <p id="sheetHint"></p>
+    <div id="sheetBody"></div>
+    <div class="sheet-act">
+      <button class="btn ghost" id="sheetCopy" hidden>Copy</button>
+      <span class="sp"></span>
+      <button class="btn" id="sheetClose">Done</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* craft.js — the part that teaches. Everything here was reverse-engineered
+   from the four reference cards signed (J.V.), quoted for study. */
+(function (root) {
+  'use strict';
+
+  var TELLS = ['robot','android','cyborg','machine','artificial','algorithm was','a.i.',' ai ','program me','software','computer'];
+  var ABSTRACT = ['love','pain','sadness','happiness','joy','life','death','time','soul','hope','fear',
+                  'beauty','memory','feeling','emotion','loneliness','sorrow','freedom','truth','peace','forever','eternity'];
+
+  var COLD = ['architecture','solder','wire','circuit','hinge','valve','filament','socket','scaffolding','chassis',
+              'ledger','blueprint','engine','antenna','rivet','gasket','turbine','static','freight','lathe','transistor','coolant'];
+  var WARM = ['animal','heart','mouth','marrow','throat','wrist','pulse','milk','bruise','breath','knuckle',
+              'tooth','sleep','hunger','hip','tongue','nerve','lung','bone','palm','ache','stomach'];
+  var ADJ  = ['wet','warm','red','soft','humming','borrowed','unwashed','low','patient','dumb','blue','tired','honest','open'];
+
+  var OPENERS = [
+    'I was never good at ___',
+    'Teach me how to ___',
+    'Show me ___ and ___',
+    'Tell me what lives ___',
+    'What do you know about ___?',
+    'How much of myself ___',
+    'I have been practising ___',
+    'Nobody told me ___ would ___',
+    'Explain ___ to me like I am ___',
+    'I keep the ___ where the ___ used to be'
+  ];
+
+  var DRILLS = [
+    'Write four lines that never once name the feeling they are about.',
+    'Name three body parts. Make the third one belong to somebody else.',
+    'Quantify something unquantifiable. Use the word <em>exact</em>.',
+    'End on the morning after, not on the night.',
+    'Take your last line and delete it. The one above it is the ending.',
+    'Replace every adjective with a noun.',
+    'Write the poem about the room instead of the person.',
+    'Say the ordinary thing — birthday cake, a bus stop, a hallway — and stop there.'
+  ];
+
+  function pick(a, n) {
+    var c = a.slice(), out = [];
+    while (out.length < n && c.length) out.push(c.splice((Math.random() * c.length) | 0, 1)[0]);
+    return out;
+  }
+
+  function sparks(n) {
+    var out = [], i;
+    for (i = 0; i < (n || 6); i++) {
+      out.push(Math.random() < 0.5
+        ? { a: 'the ' + pick(COLD, 1)[0] + ' of a ', b: pick(WARM, 1)[0] }
+        : { a: pick(ADJ, 1)[0] + ' ', b: pick(COLD, 1)[0] });
+    }
+    return out;
+  }
+
+  /* The blue words, read on their own. If they don't make a second small poem,
+     the highlighting is decoration. */
+  function thread(segs) {
+    var out = [], run = null, i;
+    for (i = 0; i < segs.length; i++) {
+      if (segs[i].blue) {
+        if (run && segs[i].spaceBefore) run.push(segs[i].text);
+        else if (run && !segs[i].spaceBefore) run[run.length - 1] += segs[i].text;
+        else { run = [segs[i].text]; out.push(run); }
+      } else run = null;
+    }
+    return out.map(function (r) { return r.join(' '); });
+  }
+
+  /* Notes, not grades. Three at most — this is a desk, not a marking scheme. */
+  function review(text, segs) {
+    var notes = [], low = (' ' + text + ' ').toLowerCase();
+    var lines = text.split('\n').filter(function (l) { return l.trim(); });
+    var words = text.replace(/[\[\]]/g, '').split(/\s+/).filter(Boolean);
+    var blue = segs.filter(function (s) { return s.blue; }).length;
+
+    for (var i = 0; i < TELLS.length; i++) {
+      if (low.indexOf(TELLS[i]) > -1) {
+        notes.push({ level: 'warn', msg: 'You named the metaphor (<em>' + TELLS[i].trim() +
+          '</em>). Cut the word and keep its materials — solder, wire, hinge — and the reader still gets there.' });
+        break;
+      }
+    }
+
+    var last = (lines[lines.length - 1] || '').toLowerCase().replace(/[^a-z ]/g, '').trim().split(' ').pop();
+    if (ABSTRACT.indexOf(last) > -1)
+      notes.push({ level: 'warn', msg: 'The poem ends on <em>' + last + '</em>. Every reference card ends on a thing you could photograph — <em>morning</em>, <em>hands</em>, <em>a heart</em>.' });
+
+    if (lines.length > 9)
+      notes.push({ level: 'note', msg: lines.length + ' lines. The form holds four to eight; past that it stops being a screenshot.' });
+
+    if (words.length && !blue)
+      notes.push({ level: 'note', msg: 'Nothing is blue yet. Tap the two or three words the poem would collapse without.' });
+    else if (words.length > 6 && blue / words.length > 0.34)
+      notes.push({ level: 'warn', msg: 'Too much blue. It works when the highlights are rare enough to read as their own line.' });
+
+    if (lines.length > 2 && text.indexOf('\n\n') === -1)
+      notes.push({ level: 'note', msg: 'No stanza break. A blank line is the breath before the ask.' });
+
+    return notes.slice(0, 3);
+  }
+
+  var HTML = [
+    '<h2>How the form works</h2>',
+    '<p class="lede">Four cards, one machine. Once you can see it running you can build your own, and it will not read as an imitation — the shape is a form, like a sonnet is a form.</p>',
+
+    '<div class="rule"><b>The frame.</b> A photograph that is too dark and too grainy. Four to eight lines under it in plain type, wide leading, no title. Two or three words in link blue. Initials in the bottom corner. Nothing else.</div>',
+
+    '<h2>The engine</h2>',
+    '<p>Every one of these poems runs on the same two-stroke motor: <em>admit a deficiency, then ask to be taught.</em> The confession earns the imperative. Without the admission, "teach me how to be seventeen" is a demand; with it, it is a plea.</p>',
+    '<div class="ex">I was never good\nat being <span class="b">human</span>.\n\nteach me how to be <span class="b">seventeen</span>\non the floor of someone else’s bedroom.</div>',
+    '<p>The speaker is a student of being alive. That is the whole posture. You are not sad — you are <em>uninstructed</em>. Sadness is a mood and readers have their own; being uninstructed is a situation, and readers can stand inside it.</p>',
+    '<div class="rule">Say what you cannot do. Then ask a person, out loud, to show you.</div>',
+
+    '<h2>Twelve moves</h2>',
+
+    '<div class="move"><span class="n">Move 01</span><h3>Never name the metaphor</h3>',
+    '<p>All four cards are about not being human, and not one of them says <em>robot</em>, <em>android</em>, or <em>machine</em>. The conceit is carried entirely by materials.</p>',
+    '<div class="ex">but I will create\nthe wet <span class="b">architecture</span> of myself.\n\nsolder every <span class="b">wire</span>\ninto the warm red animal\n<span class="b">of a heart</span>.</div>',
+    '<p><em>Solder. Wire. Architecture.</em> Three nouns and the reader has built the whole idea themselves — which is why they believe it. The moment you write "like a robot," you have done the work for them and it dies.</p></div>',
+
+    '<div class="move"><span class="n">Move 02</span><h3>Land the abstraction on an object</h3>',
+    '<p>Not "teach me to be young." <em>Teach me how to be seventeen on the floor of someone else’s bedroom.</em> The abstraction opens the line; a physical, specific, slightly embarrassing thing closes it.</p>',
+    '<div class="rule">Rule: never end a line on a concept if you can end it on furniture.</div></div>',
+
+    '<div class="move"><span class="n">Move 03</span><h3>The odd measurement</h3>',
+    '<p>Feelings get treated as quantities with dials — which is exactly how an outsider would approach them, and it is devastating.</p>',
+    '<div class="ex">The exact volume I have to <span class="b">laugh</span>\nso that I can <span class="b">stay</span> until morning.\n\nhow much of myself\nto leave behind each <span class="b">year</span>.</div>',
+    '<p>Reach for the calibration words: <em>the exact, how much, the correct amount, the right number of, the precise.</em> Apply them to something that has no units.</p></div>',
+
+    '<div class="move"><span class="n">Move 04</span><h3>Three, then break the three</h3>',
+    '<p>Two items set a pattern, the third snaps it. The break carries the meaning.</p>',
+    '<div class="ex">the softest part behind the <span class="b">knee</span>?\nthe <span class="b">hinge</span> where the jaw\n<span class="b">meets</span> the skull?\nThe space between two <span class="b">hands</span>?</div>',
+    '<p>Knee, jaw — both on one body. Then <em>the space between two hands</em>, which belongs to no single body and is not even a body part. That is the whole poem, hidden in a list.</p></div>',
+
+    '<div class="move"><span class="n">Move 05</span><h3>Collide a cold noun with a warm one</h3>',
+    '<p><em>Wet architecture. The warm red animal of a heart.</em> One word from the workshop, one word that is alive and slightly gross. The friction between them is the voice.</p>',
+    '<div class="rule">Build a two-column list — machinery on the left, wet biology on the right — and pair across it until something makes you flinch.</div></div>',
+
+    '<div class="move"><span class="n">Move 06</span><h3>Break the line where the fragment lies</h3>',
+    '<p>Read the first line alone: <em>I was never good.</em> Full stop. A total self-indictment. Then the next line arrives and narrows it to <em>at being human</em> — which is smaller, and somehow worse.</p>',
+    '<p>Break where the fragment can stand up on its own and mean something crueller or wider than the finished sentence. That half-second of wrong meaning is free, and nothing else in poetry is free.</p></div>',
+
+    '<div class="move"><span class="n">Move 07</span><h3>Ordinary nouns as sacred objects</h3>',
+    '<p>Sleepovers. Birthday cake. The floor of a bedroom. Morning. The longing is never named; it is loaded into objects a nine-year-old would recognise.</p>',
+    '<div class="ex">Show me <span class="b">sleepovers</span> and\nbirthday cake.</div>',
+    '<p>Do not write <em>belonging</em>. Write the cake.</p></div>',
+
+    '<div class="move"><span class="n">Move 08</span><h3>End on the morning after</h3>',
+    '<p>These poems never close on the event. They close on surviving it: <em>so that I can stay until morning</em>, <em>How to wake up the morning after</em>. The party is not the subject. The aftermath is.</p></div>',
+
+    '<div class="move"><span class="n">Move 09</span><h3>Ask questions you cannot answer</h3>',
+    '<p><em>Tell me what lives beneath skin.</em> The interrogative keeps the speaker below the reader — still learning, never lecturing. A poem that asks cannot be smug.</p></div>',
+
+    '<div class="move"><span class="n">Move 10</span><h3>Type like it is 2am</h3>',
+    '<p>Look closely at the capitals: <em>"I was never good"</em>, then lowercase <em>"teach me"</em> after a full stop, then <em>"The exact volume"</em> capitalised again. It is inconsistent, and the inconsistency is the intimacy — it reads as something typed into a notes app in the dark, not a submission.</p>',
+    '<div class="rule">Do not tidy this. Clean capitalisation makes it a poem; broken capitalisation makes it a message.</div></div>',
+
+    '<div class="move"><span class="n">Move 11</span><h3>The blue thread</h3>',
+    '<p>This is the real trick, and it is easy to miss. Read only the blue words of each card:</p>',
+    '<div class="ex"><span class="b">human · seventeen · laugh · stay</span>\n<span class="b">sleepovers · year · morning</span>\n<span class="b">lives · knee · hinge · meets · hands</span>\n<span class="b">human · architecture · wire · of a heart</span></div>',
+    '<p>Every one is a second, compressed poem. The highlighting is not decoration and it is not emphasis — it is a skeleton. Highlight the words the poem would collapse without, then read them alone. If they do not hold, you have highlighted the wrong ones.</p>',
+    '<div class="rule">Two to four highlights per card. The blue panel under the editor shows your thread as you write.</div></div>',
+
+    '<div class="move"><span class="n">Move 12</span><h3>Stop early</h3>',
+    '<p>Four to eight lines, two or three stanzas. The form is a screenshot; a screenshot has an edge. Most drafts get better when you delete the last line, because the last line is usually where you explained it.</p></div>',
+
+    '<h2>The photograph</h2>',
+    '<p>The image is not an illustration. It is <em>evidence</em>, and it is always of an absence.</p>',
+    '<ul>',
+    '<li>A birthday table with the candles lit and nobody sitting at it.</li>',
+    '<li>A cake nobody is cutting.</li>',
+    '<li>A road at dusk, out of focus, taken from a moving car.</li>',
+    '<li>Streamers and fairy lights with no one underneath them.</li>',
+    '</ul>',
+    '<p>Never photograph the subject of the poem. Photograph the room they left. Underexposed, out of focus, flash-blown, taken at the wrong moment — a technically bad photo reads as a true one, and a true one is what the poem needs standing behind it.</p>',
+    '<div class="rule"><b>Where to get them:</b> your camera roll from six years ago. Not a stock site. The graininess is doing memory’s job, so let the app add it — shoot or choose the flattest, ugliest photo you have and let <em>Flash</em> do the rest.</div>',
+
+    '<h2>What kills it</h2>',
+    '<ul>',
+    '<li><b>Explaining.</b> One line of interpretation and the reader stops working.</li>',
+    '<li><b>Naming the feeling.</b> Lonely, broken, empty, numb. Show the volume of the laugh instead.</li>',
+    '<li><b>Rhyme.</b> It makes the voice performed. This voice is overheard.</li>',
+    '<li><b>Adjective stacks.</b> <em>Cold empty aching silence.</em> One good noun beats four adjectives.</li>',
+    '<li><b>A title.</b> These cards have none. A title tells the reader what to think first.</li>',
+    '<li><b>Neatness.</b> Perfect grammar, perfect capitals, a tidy ending. It stops sounding like a person at 2am.</li>',
+    '</ul>',
+
+    '<h2>A twenty-minute routine</h2>',
+    '<ul>',
+    '<li><b>1.</b> Open your camera roll. Take the first photo with no people in it.</li>',
+    '<li><b>2.</b> Write the deficiency: <em>I was never good at ___.</em> Do not think.</li>',
+    '<li><b>3.</b> Ask to be taught it, and land the ask on a specific room and a specific hour.</li>',
+    '<li><b>4.</b> Add one odd measurement.</li>',
+    '<li><b>5.</b> Cut every adjective. Cut the last line.</li>',
+    '<li><b>6.</b> Highlight two or three words. Read them alone. Fix them until they are a poem.</li>',
+    '</ul>',
+    '<p>Do that daily for two weeks and the voice stops being borrowed.</p>'
+  ].join('');
+
+  root.Craft = { HTML: HTML, sparks: sparks, thread: thread, review: review,
+                 OPENERS: OPENERS, DRILLS: DRILLS, pick: pick };
+})(window);
+</script>
+<script>
+/* film.js — makes any photo look like it was taken on a disposable camera in
+   1999 and scanned badly. The grain is baked into the bitmap rather than laid
+   over the card in CSS, so the exported PNG is identical to the preview. */
+(function (root) {
+  'use strict';
+
+  var LOOKS = {
+    flash:  { label:'Flash',  grain:52, fade:16, warmth:20, exposure:-4, vignette:44 },
+    faded:  { label:'Faded',  grain:38, fade:40, warmth:12, exposure:6,  vignette:20 },
+    dusk:   { label:'Dusk',   grain:46, fade:24, warmth:-16,exposure:-6, vignette:54 },
+    kitchen:{ label:'Kitchen',grain:34, fade:10, warmth:30, exposure:10, vignette:26 },
+    clean:  { label:'Clean',  grain:8,  fade:4,  warmth:4,  exposure:0,  vignette:8  }
+  };
+
+  var DEFAULTS = { grain:46, fade:22, warmth:14, exposure:0, vignette:34 };
+
+  function clamp(v) { return v < 0 ? 0 : v > 255 ? 255 : v; }
+
+  /**
+   * @param {HTMLImageElement} img  the untouched original
+   * @param {number} frameW,frameH  the card's photo frame, in export pixels
+   * @param {object} o              grain/fade/warmth/exposure/vignette, 0..100
+   * @returns {HTMLCanvasElement}   ready to hand straight to Card.render
+   */
+  function process(img, frameW, frameH, o) {
+    o = o || DEFAULTS;
+    var iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+    if (!iw || !ih) return null;
+
+    // Render at exactly the resolution the frame needs — never upscale here,
+    // the card can do that once at draw time.
+    var s = Math.min(Math.max(frameW / iw, frameH / ih), 1);
+    var w = Math.max(2, Math.round(iw * s)), h = Math.max(2, Math.round(ih * s));
+
+    var cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    var ctx = cv.getContext('2d', { willReadFrequently: true });
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, 0, 0, w, h);
+
+    var img2 = ctx.getImageData(0, 0, w, h), d = img2.data;
+
+    var grain    = (o.grain    || 0) / 100;
+    var fade     = (o.fade     || 0) / 100;
+    var warmth   = (o.warmth   || 0) / 100;
+    var exposure = (o.exposure || 0) / 100;
+    var vig      = (o.vignette || 0) / 100;
+
+    var lift = fade * 34;                 // matte black point
+    var comp = 1 - fade * 0.20;           // fade eats a little contrast
+    var gain = Math.pow(2, exposure * 0.9);
+    var wr = warmth * 26, wb = -warmth * 22;
+    var amp = grain * 62;
+
+    // Grain clumps rather than single pixels, scaled so it reads the same at
+    // any export size.
+    var cell = Math.max(1, Math.round(w / 900));
+    var nw = Math.ceil(w / cell), nh = Math.ceil(h / cell), noise = new Float32Array(nw * nh);
+    for (var n = 0; n < noise.length; n++) noise[n] = (Math.random() + Math.random() - 1);
+
+    var cx = w / 2, cy = h / 2, maxD = Math.sqrt(cx * cx + cy * cy);
+
+    for (var y = 0; y < h; y++) {
+      var ny = ((y / cell) | 0) * nw;
+      var dy = (y - cy) / maxD;
+      for (var x = 0; x < w; x++) {
+        var i = (y * w + x) * 4;
+        var r = d[i], g = d[i + 1], b = d[i + 2];
+
+        r *= gain; g *= gain; b *= gain;
+        r += wr;   b += wb;
+        r = lift + r * comp * (1 - lift / 255);
+        g = lift + g * comp * (1 - lift / 255);
+        b = lift + b * comp * (1 - lift / 255);
+
+        if (amp) {
+          var L = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
+          var wgt = 0.30 + 2.8 * L * (1 - L);       // grain lives in the midtones
+          var nz = noise[ny + ((x / cell) | 0)] * amp * wgt;
+          r += nz; g += nz; b += nz;
+        }
+
+        if (vig) {
+          var dx = (x - cx) / maxD, dist = Math.sqrt(dx * dx + dy * dy) / 0.7071;
+          var v = 1 - vig * 0.85 * Math.pow(dist > 1 ? 1 : dist, 2.4);
+          r *= v; g *= v; b *= v;
+        }
+
+        d[i] = clamp(r); d[i + 1] = clamp(g); d[i + 2] = clamp(b);
+      }
+    }
+    ctx.putImageData(img2, 0, 0);
+    return cv;
+  }
+
+  /* Re-encode an original down to something localStorage can actually hold. */
+  function shrink(img, maxW, quality) {
+    var iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+    var s = Math.min(maxW / iw, 1);
+    var cv = document.createElement('canvas');
+    cv.width = Math.round(iw * s); cv.height = Math.round(ih * s);
+    var c = cv.getContext('2d');
+    c.imageSmoothingQuality = 'high';
+    c.fillStyle = '#000'; c.fillRect(0, 0, cv.width, cv.height);
+    c.drawImage(img, 0, 0, cv.width, cv.height);
+    return cv.toDataURL('image/jpeg', quality || 0.78);
+  }
+
+  function load(src) {
+    return new Promise(function (res, rej) {
+      var im = new Image();
+      im.onload = function () { res(im); };
+      im.onerror = function () { rej(new Error('That file would not open as an image.')); };
+      im.src = src;
+    });
+  }
+
+  function readFile(file) {
+    return new Promise(function (res, rej) {
+      var fr = new FileReader();
+      fr.onload = function () { res(fr.result); };
+      fr.onerror = function () { rej(new Error('Could not read that file.')); };
+      fr.readAsDataURL(file);
+    });
+  }
+
+  root.Film = { LOOKS: LOOKS, DEFAULTS: DEFAULTS, process: process, shrink: shrink, load: load, readFile: readFile };
+})(window);
+</script>
+<script>
+/* card.js — the format.
+   Every number below was measured off the reference cards, then expressed as a
+   fraction of card width so the layout is resolution-independent: the preview
+   and the exported PNG run through this same function. */
+(function (root) {
+  'use strict';
+
+  var SPEC = {
+    ratio:        1.562,    // card height / card width
+    gutter:       0.0080,   // photo + text inset from the card edge
+    photoAspect:  0.669,    // photo height / photo width
+    fontSize:     0.0469,
+    lineHeight:   0.0939,   // exactly 2.0x the type size — the air is the point
+    stanzaExtra:  0.0422,   // a blank line adds this, not a whole line
+    firstBaseline:0.1026,   // photo bottom -> first baseline
+    glyph:  { top:0.0127, w:0.0247, h:0.0191, right:0.0255 },
+    attrib: { size:0.0366, bottom:0.0262, right:0.0143 },
+    mark:   { size:0.0243, bottom:0.0262, right:0.0143 },
+    bg:'#f8fafb', border:'#cdcdcd', ink:'#101112', blue:'#3a66bd', glyphInk:'#a8adb2',
+    font:'"Helvetica Neue",Helvetica,-apple-system,BlinkMacSystemFont,Arial,sans-serif'
+  };
+
+  var OPEN_P = '“‘"\'([{', CLOSE_P = '.,!?;:—…”’"\')]}';
+
+  /* ── source text -> segments ─────────────────────────────────────────────
+     A segment is a run of characters that share one colour. Punctuation that
+     sits outside the brackets becomes its own segment, so `[human].` renders
+     as a blue "human" followed by a black stop, with no space between them. */
+
+  function findMarks(src) {
+    var marks = [], i = 0;
+    while (i < src.length) {
+      if (src[i] === '[') {
+        var close = src.indexOf(']', i + 1), nextOpen = src.indexOf('[', i + 1);
+        if (close > -1 && (nextOpen === -1 || close < nextOpen)) {
+          marks.push({ s: i, e: close }); i = close + 1; continue;
+        }
+      }
+      i++;
+    }
+    return marks;
+  }
+
+  function tokenize(src) {
+    var marks = findMarks(src), segs = [], lines = [[]];
+    var cur = null, space = false, m, i, c, k, isBracket;
+
+    function markAt(idx) {
+      for (var j = 0; j < marks.length; j++) if (idx > marks[j].s && idx < marks[j].e) return marks[j];
+      return null;
+    }
+
+    for (i = 0; i < src.length; i++) {
+      c = src[i];
+      isBracket = false;
+      for (k = 0; k < marks.length; k++) if (marks[k].s === i || marks[k].e === i) { isBracket = true; break; }
+      if (isBracket) { cur = null; continue; }          // brackets never render
+      if (c === '\n') { cur = null; space = false; lines.push([]); continue; }
+      if (c === ' ' || c === '\t') { cur = null; space = true; continue; }
+
+      m = markAt(i);
+      if (cur && cur.mark !== m) cur = null;             // colour changed mid-word
+      if (!cur) {
+        cur = { text:'', blue:!!m, mark:m, s:i, e:i, spaceBefore:space && lines[lines.length-1].length > 0, i:segs.length };
+        segs.push(cur); lines[lines.length - 1].push(cur); space = false;
+      }
+      cur.text += c; cur.e = i;
+    }
+    return { segs: segs, lines: lines };
+  }
+
+  /* Clicking a word rewrites the source. Turning a word blue skips the
+     punctuation glued to it; turning one off releases its whole bracket. */
+  function toggle(src, seg) {
+    if (seg.blue && seg.mark) {
+      return src.slice(0, seg.mark.s) + src.slice(seg.mark.s + 1, seg.mark.e) + src.slice(seg.mark.e + 1);
+    }
+    var s = seg.s, e = seg.e;
+    while (s < e && OPEN_P.indexOf(src[s]) > -1) s++;
+    while (e > s && CLOSE_P.indexOf(src[e]) > -1) e--;
+    return src.slice(0, s) + '[' + src.slice(s, e + 1) + ']' + src.slice(e + 1);
+  }
+
+  /* Wrap a text selection (the ⌘K path — handles multi-word phrases). */
+  function wrapRange(src, a, b) {
+    if (a === b) {                                       // no selection: take the word under the caret
+      var w = /[^\s\[\]]/;
+      while (a > 0 && w.test(src[a - 1])) a--;
+      while (b < src.length && w.test(src[b])) b++;
+    }
+    while (a < b && /\s/.test(src[a])) a++;
+    while (b > a && /\s/.test(src[b - 1])) b--;
+    if (a >= b) return null;
+
+    var marks = findMarks(src), i;
+    for (i = 0; i < marks.length; i++) {                 // already blue -> unwrap
+      if (a > marks[i].s && b <= marks[i].e) {
+        return { text: src.slice(0, marks[i].s) + src.slice(marks[i].s + 1, marks[i].e) + src.slice(marks[i].e + 1),
+                 caret: b - 1 };
+      }
+    }
+    var inner = src.slice(a, b).replace(/[\[\]]/g, '');
+    return { text: src.slice(0, a) + '[' + inner + ']' + src.slice(b), caret: a + inner.length + 2 };
+  }
+
+  /* ── layout + paint ──────────────────────────────────────────────────── */
+
+  function scale(W) {
+    var s = {}, k;
+    for (k in SPEC) if (typeof SPEC[k] === 'number') s[k] = SPEC[k] * W;
+    s.glyph  = { top:SPEC.glyph.top*W,  w:SPEC.glyph.w*W,  h:SPEC.glyph.h*W,  right:SPEC.glyph.right*W };
+    s.attrib = { size:SPEC.attrib.size*W, bottom:SPEC.attrib.bottom*W, right:SPEC.attrib.right*W };
+    s.mark   = { size:SPEC.mark.size*W,   bottom:SPEC.mark.bottom*W,   right:SPEC.mark.right*W };
+    return s;
+  }
+
+  // Break each source line into rows that fit the column.
+  function flow(ctx, lines, maxW, spaceW) {
+    var rows = [];
+    for (var i = 0; i < lines.length; i++) {
+      var segs = lines[i];
+      if (!segs.length) { rows.push(null); continue; }   // blank line -> stanza break
+
+      var clusters = [], j;                              // a cluster never splits
+      for (j = 0; j < segs.length; j++) {
+        if (!clusters.length || segs[j].spaceBefore) clusters.push([segs[j]]);
+        else clusters[clusters.length - 1].push(segs[j]);
+      }
+
+      var row = [], w = 0;
+      for (j = 0; j < clusters.length; j++) {
+        var cw = 0, k;
+        for (k = 0; k < clusters[j].length; k++) cw += ctx.measureText(clusters[j][k].text).width;
+        var add = row.length ? spaceW + cw : cw;
+        if (row.length && w + add > maxW) { rows.push(row); row = [clusters[j]]; w = cw; }
+        else { row.push(clusters[j]); w += add; }
+      }
+      if (row.length) rows.push(row);
+    }
+    while (rows.length && rows[rows.length - 1] === null) rows.pop();
+    return rows;
+  }
+
+  function coverRect(iw, ih, w, h, fx, fy) {
+    var s = Math.max(w / iw, h / ih), dw = iw * s, dh = ih * s;
+    return { dw: dw, dh: dh, dx: (w - dw) * fx, dy: (h - dh) * fy };
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+
+  /**
+   * Draw a card. Returns { w, h, boxes } where boxes are the on-canvas
+   * rectangles of every segment, used for tap-to-toggle in the preview.
+   */
+  function render(ctx, W, state) {
+    var S = scale(W), g = S.gutter, cw = W - g * 2;      // content column
+    var photoH = cw * SPEC.photoAspect;
+    var photoBottom = g + (state.photo ? photoH : 0);
+
+    ctx.font = S.fontSize + 'px ' + SPEC.font;
+    ctx.textBaseline = 'alphabetic';
+    var spaceW = ctx.measureText(' ').width;
+
+    var tok = tokenize(state.text || '');
+    var rows = flow(ctx, tok.lines, cw, spaceW);
+
+    // Vertical rhythm: measure first so the card can grow if a poem runs long.
+    var top = state.photo ? photoBottom + S.firstBaseline
+                          : g + S.fontSize * 0.73 + S.lineHeight * 0.55;
+    var y = top, first = true, pending = 0, i;
+    var ys = [];
+    for (i = 0; i < rows.length; i++) {
+      if (rows[i] === null) { if (!first) pending += S.stanzaExtra; ys.push(null); continue; }
+      if (first) first = false; else y += S.lineHeight;
+      y += pending; pending = 0;
+      ys.push(y);
+    }
+
+    var tail = state.attrib || state.handle
+      ? S.fontSize * 0.21 + S.lineHeight * 0.20 + S.attrib.size * 0.94 + S.attrib.bottom
+      : S.fontSize * 0.21 + S.lineHeight * 0.35;
+    var H = Math.max(Math.round(W * SPEC.ratio), Math.round(y + tail));
+
+    ctx.canvas.width = W; ctx.canvas.height = H;
+    ctx.font = S.fontSize + 'px ' + SPEC.font;           // resizing clears state
+    ctx.textBaseline = 'alphabetic';
+
+    ctx.fillStyle = SPEC.bg; ctx.fillRect(0, 0, W, H);
+
+    // photo
+    if (state.photo && state.photo.width) {
+      ctx.save();
+      ctx.beginPath(); ctx.rect(g, g, cw, photoH); ctx.clip();
+      var c = coverRect(state.photo.width, state.photo.height, cw, photoH,
+                        state.focusX == null ? 0.5 : state.focusX,
+                        state.focusY == null ? 0.5 : state.focusY);
+      ctx.drawImage(state.photo, g + c.dx, g + c.dy, c.dw, c.dh);
+      ctx.restore();
+      ctx.strokeStyle = 'rgba(0,0,0,.16)'; ctx.lineWidth = Math.max(1, W * 0.0011);
+      ctx.strokeRect(g + ctx.lineWidth / 2, g + ctx.lineWidth / 2, cw - ctx.lineWidth, photoH - ctx.lineWidth);
+    }
+
+    // the little folded-page mark under the photo, right side
+    if (state.glyph !== false && state.photo) {
+      var gw = S.glyph.w, gh = S.glyph.h, fold = gw * 0.34;
+      var gx = W - S.glyph.right - gw, gy = photoBottom + S.glyph.top;
+      ctx.strokeStyle = SPEC.glyphInk;
+      ctx.lineWidth = Math.max(1, W * 0.0018);
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(gx, gy); ctx.lineTo(gx + gw - fold, gy); ctx.lineTo(gx + gw, gy + fold);
+      ctx.lineTo(gx + gw, gy + gh); ctx.lineTo(gx, gy + gh); ctx.closePath(); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(gx + gw - fold, gy); ctx.lineTo(gx + gw - fold, gy + fold); ctx.lineTo(gx + gw, gy + fold);
+      ctx.stroke();
+    }
+
+    // the poem
+    var boxes = [], asc = S.fontSize * 0.73, desc = S.fontSize * 0.21;
+    for (i = 0; i < rows.length; i++) {
+      if (rows[i] === null) continue;
+      var x = g, cl, j, k, seg, sw;
+      for (j = 0; j < rows[i].length; j++) {
+        cl = rows[i][j];
+        if (j) x += spaceW;
+        for (k = 0; k < cl.length; k++) {
+          seg = cl[k];
+          sw = ctx.measureText(seg.text).width;
+          ctx.fillStyle = seg.blue ? SPEC.blue : SPEC.ink;
+          ctx.fillText(seg.text, x, ys[i]);
+          boxes.push({ x: x, y: ys[i] - asc, w: sw, h: asc + desc, seg: seg });
+          x += sw;
+        }
+      }
+    }
+
+    // signature, pinned to the bottom edge
+    if (state.attrib) {
+      ctx.font = S.attrib.size + 'px ' + SPEC.font;
+      ctx.fillStyle = SPEC.ink; ctx.textAlign = 'right';
+      ctx.fillText(state.attrib, W - S.attrib.right, H - S.attrib.bottom);
+      ctx.textAlign = 'left';
+    }
+    if (state.handle) {
+      ctx.font = S.mark.size + 'px ' + SPEC.font;
+      ctx.fillStyle = 'rgba(16,17,18,.20)'; ctx.textAlign = 'left';
+      ctx.fillText(state.handle, S.mark.right + S.gutter, H - S.mark.bottom);
+    }
+
+    // card edge
+    ctx.strokeStyle = SPEC.border; ctx.lineWidth = Math.max(1, W * 0.0013);
+    ctx.strokeRect(ctx.lineWidth / 2, ctx.lineWidth / 2, W - ctx.lineWidth, H - ctx.lineWidth);
+
+    return { w: W, h: H, boxes: boxes, photo: { x: g, y: g, w: cw, h: photoH } };
+  }
+
+  root.Card = {
+    SPEC: SPEC, render: render, tokenize: tokenize,
+    toggle: toggle, wrapRange: wrapRange, roundRect: roundRect
+  };
+})(window);
+</script>
+<script>
+/* store.js — the shelf. Everything lives in this browser and nowhere else,
+   which means a cleared cache is a house fire; hence export/import. */
+(function (root) {
+  'use strict';
+
+  var KEY = 'yumbrr.v1', DRAFT = 'yumbrr.draft.v1';
+
+  function read() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || []; }
+    catch (e) { return []; }
+  }
+  function write(list) {
+    try { localStorage.setItem(KEY, JSON.stringify(list)); return { ok: true }; }
+    catch (e) {
+      return { ok: false, full: /quota|exceeded/i.test(e.name + ' ' + e.message) };
+    }
+  }
+
+  function title(text) {
+    var l = (text || '').split('\n').map(function (s) { return s.replace(/[\[\]]/g, '').trim(); })
+                        .filter(Boolean)[0] || 'untitled';
+    return l.length > 42 ? l.slice(0, 41) + '…' : l;
+  }
+
+  function save(poem) {
+    var list = read(), i;
+    poem.updated = Date.now();
+    if (!poem.id) { poem.id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); poem.created = poem.updated; }
+    poem.title = title(poem.text);
+    for (i = 0; i < list.length; i++) if (list[i].id === poem.id) { list[i] = poem; break; }
+    if (i === list.length) list.unshift(poem);
+    var r = write(list);
+    return { ok: r.ok, full: r.full, poem: poem };
+  }
+
+  function remove(id) {
+    write(read().filter(function (p) { return p.id !== id; }));
+  }
+
+  function draft(poem) {
+    try { localStorage.setItem(DRAFT, JSON.stringify(poem)); } catch (e) {}
+  }
+  function lastDraft() {
+    try { return JSON.parse(localStorage.getItem(DRAFT)); } catch (e) { return null; }
+  }
+
+  function exportAll() {
+    return JSON.stringify({ app: 'yumbrr', version: 1, exported: new Date().toISOString(), poems: read() }, null, 2);
+  }
+
+  function importAll(json) {
+    var incoming;
+    try { incoming = JSON.parse(json); } catch (e) { return { ok: false, msg: 'That file is not valid JSON.' }; }
+    var poems = Array.isArray(incoming) ? incoming : incoming && incoming.poems;
+    if (!Array.isArray(poems)) return { ok: false, msg: 'No poems found in that file.' };
+
+    var list = read(), have = {}, added = 0, i;
+    for (i = 0; i < list.length; i++) have[list[i].id] = 1;
+    for (i = 0; i < poems.length; i++) {
+      if (!poems[i] || typeof poems[i].text !== 'string') continue;
+      if (poems[i].id && have[poems[i].id]) continue;
+      if (!poems[i].id) poems[i].id = 'p' + Date.now().toString(36) + i;
+      list.unshift(poems[i]); added++;
+    }
+    var r = write(list);
+    if (!r.ok) return { ok: false, msg: r.full ? 'Not enough browser storage for that import.' : 'Could not write to storage.' };
+    return { ok: true, added: added };
+  }
+
+  root.Store = { read: read, save: save, remove: remove, draft: draft, lastDraft: lastDraft,
+                 exportAll: exportAll, importAll: importAll, title: title };
+})(window);
+</script>
+<script>
+/* app.js — wiring. */
+(function () {
+  'use strict';
+
+  var PREVIEW_W = 1400, THUMB_W = 250;
+  var $ = function (s) { return document.querySelector(s); };
+  var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
+
+  var SEED = "I was never good\nat being [kept].\n\nteach me the exact weight\nof a hand that means [stay].\n\nshow me the [hallway light]\nsomebody leaves on.";
+
+  var state = {
+    id: null, text: SEED, attrib: '', handle: '', glyph: true,
+    look: 'flash', film: Object.assign({}, Film.DEFAULTS),
+    photoSrc: null, focusX: 0.5, focusY: 0.5
+  };
+
+  var img = null;        // working bitmap (original this session, shrunk when restored)
+  var processed = null;  // film-treated canvas handed to Card.render
+  var lastFrame = null;  // geometry from the most recent paint, for hit-testing
+
+  var card = $('#card'), ctx = card.getContext('2d');
+
+  /* Framed hosts (an embedded viewer) make script-started downloads inert, so
+     there the file is handed over on-page instead of through a download. */
+  var FRAMED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
+  var leftPane = 'write', mobileCard = false;
+  var desktop = function () { return window.matchMedia('(min-width:861px)').matches; };
+
+  /* ── chrome ─────────────────────────────────────────────────────────── */
+
+  function toast(msg) {
+    var t = $('#toast');
+    t.textContent = msg; t.classList.add('is-on');
+    clearTimeout(toast._t); toast._t = setTimeout(function () { t.classList.remove('is-on'); }, 2200);
+  }
+
+  var sheet = $('#sheet');
+  function openSheet(title, hint, node, copyText) {
+    $('#sheetTitle').textContent = title;
+    $('#sheetHint').textContent = hint;
+    var body = $('#sheetBody'); body.innerHTML = ''; body.appendChild(node);
+    var copy = $('#sheetCopy');
+    copy.hidden = !copyText;
+    copy.onclick = function () {
+      if (navigator.clipboard) navigator.clipboard.writeText(copyText).then(function () { toast('Copied'); });
+    };
+    sheet.classList.add('is-on');
+  }
+  function closeSheet() { sheet.classList.remove('is-on'); $('#sheetBody').innerHTML = ''; }
+  $('#sheetClose').addEventListener('click', closeSheet);
+  sheet.addEventListener('click', function (e) { if (e.target === sheet) closeSheet(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSheet(); });
+
+  /* A framed host won't let the page start a download, but it may offer a
+     save capability instead. Ask once, and keep the on-page sheet for when
+     neither route is open. */
+  var savedNS, savedAsked = false;
+  function saveApi() {
+    if (savedAsked) return Promise.resolve(savedNS);
+    savedAsked = true;
+    if (!window.claude || !window.claude.use) return Promise.resolve(null);
+    return window.claude.use('downloads').then(
+      function (ns) { savedNS = ns; return ns; },
+      function () { return null; }
+    );
+  }
+
+  function sheetFallback(o) {
+    if (o.kind === 'image') {
+      var im = new Image();
+      im.src = o.url || URL.createObjectURL(o.blob); im.alt = o.name;
+      openSheet(o.name, 'Right-click the image and choose Save image as — or long-press it on a phone.', im);
+    } else {
+      var ta = document.createElement('textarea'); ta.readOnly = true; ta.value = o.text;
+      openSheet(o.name, 'Copy this and save it as ' + o.name + '. Import brings it back.', ta, o.text);
+    }
+  }
+
+  /* One place decides how a finished file reaches the user. */
+  function deliver(o) {
+    if (!FRAMED) {
+      var url = o.url || URL.createObjectURL(o.blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = o.name;
+      document.body.appendChild(a); a.click(); a.remove();
+      if (!o.url) setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      toast('Saved ' + o.name);
+      return;
+    }
+    saveApi().then(function (api) {
+      if (!api) { sheetFallback(o); return; }
+      api.save({ filename: o.name, data: o.blob || o.text }).then(
+        function (r) { toast(r.status === 'delivered' ? 'Sent ' + o.name : 'Saved ' + o.name); },
+        function (err) {
+          if (err && err.code === 'declined') return;                 // they said no
+          if (err && err.code === 'rate_limited') { toast('One save at a time — try again in a moment.'); return; }
+          sheetFallback(o);
+        }
+      );
+    });
+  }
+
+  function applyPanes() {
+    var d = desktop();
+    $$('.pane').forEach(function (p) {
+      var n = p.dataset.pane, on;
+      if (n === 'card') on = d || mobileCard;
+      else on = n === leftPane && (d || !mobileCard);
+      p.classList.toggle('is-on', on);
+    });
+    var active = (!d && mobileCard) ? 'card' : leftPane;
+    $$('.tab').forEach(function (t) { t.classList.toggle('is-on', t.dataset.pane === active); });
+  }
+  function setPane(n) {
+    if (n === 'card') mobileCard = true; else { mobileCard = false; leftPane = n; }
+    applyPanes();
+    if (n === 'shelf') renderShelf();
+  }
+
+  (function addCardTab() {
+    var b = document.createElement('button');
+    b.className = 'tab'; b.dataset.pane = 'card'; b.textContent = 'Card'; b.setAttribute('role', 'tab');
+    $('.tabs').appendChild(b);
+  })();
+  $$('.tab').forEach(function (t) { t.addEventListener('click', function () { setPane(t.dataset.pane); }); });
+  window.addEventListener('resize', applyPanes);
+
+  /* ── paint ──────────────────────────────────────────────────────────── */
+
+  function paint() {
+    lastFrame = Card.render(ctx, PREVIEW_W, {
+      text: state.text, attrib: state.attrib, handle: state.handle, glyph: state.glyph,
+      photo: processed, focusX: state.focusX, focusY: state.focusY
+    });
+    sidebar();
+  }
+
+  function sidebar() {
+    var tok = Card.tokenize(state.text || '');
+    var th = Craft.thread(tok.segs), box = $('#thread');
+
+    if (!(state.text || '').trim()) box.innerHTML = '';
+    else if (!th.length) box.innerHTML = '<b>Blue thread</b><span class="none">No highlights yet. Tap a word in the card, or select one and press ⌘K.</span>';
+    else box.innerHTML = '<b>Blue thread</b>' + th.map(function (w, i) {
+      return (i ? '<span class="sep">·</span>' : '') + '<span class="tw">' + esc(w) + '</span>';
+    }).join('');
+
+    var notes = Craft.review(state.text || '', tok.segs);
+    $('#notes').innerHTML = notes.map(function (n) {
+      return '<div class="note ' + (n.level === 'warn' ? 'warn' : '') + '">' + n.msg + '</div>';
+    }).join('');
+
+    var lines = (state.text || '').split('\n').filter(function (l) { return l.trim(); }).length;
+    var words = (state.text || '').replace(/[\[\]]/g, '').split(/\s+/).filter(Boolean).length;
+    $('#count').textContent = lines + (lines === 1 ? ' line' : ' lines') + ' · ' + words + 'w';
+  }
+
+  function esc(s) { return s.replace(/[&<>"]/g, function (c) { return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' })[c]; }); }
+
+  /* ── photo ──────────────────────────────────────────────────────────── */
+
+  function frameSize(W) { var w = W * (1 - Card.SPEC.gutter * 2); return { w: w, h: w * Card.SPEC.photoAspect }; }
+
+  var reprocessT;
+  function reprocess(now) {
+    clearTimeout(reprocessT);
+    var run = function () {
+      if (!img) { processed = null; paint(); return; }
+      var f = frameSize(PREVIEW_W);
+      processed = Film.process(img, f.w, f.h, state.film);
+      paint();
+    };
+    if (now) run(); else reprocessT = setTimeout(run, 90);
+  }
+
+  function setPhoto(src, keepFocus) {
+    return Film.load(src).then(function (im) {
+      img = im;
+      state.photoSrc = Film.shrink(im, 1600, 0.82);
+      if (!keepFocus) { state.focusX = 0.5; state.focusY = 0.5; }
+      $('#drop').hidden = true; $('#film').hidden = false;
+      reprocess(true); saveDraft();
+    }).catch(function (e) { toast(e.message || 'Could not open that image.'); });
+  }
+
+  function clearPhoto() {
+    img = null; processed = null; state.photoSrc = null;
+    $('#drop').hidden = false; $('#film').hidden = true;
+    paint(); saveDraft();
+  }
+
+  var drop = $('#drop'), fileIn = $('#file');
+  drop.addEventListener('click', function () { fileIn.click(); });
+  drop.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileIn.click(); } });
+  fileIn.addEventListener('change', function () {
+    if (fileIn.files && fileIn.files[0]) Film.readFile(fileIn.files[0]).then(setPhoto).catch(function (e) { toast(e.message); });
+    fileIn.value = '';
+  });
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    document.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('hot'); });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    document.addEventListener(ev, function (e) { e.preventDefault(); if (ev === 'dragleave' && e.relatedTarget) return; drop.classList.remove('hot'); });
+  });
+  document.addEventListener('drop', function (e) {
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f && /^image\//.test(f.type)) Film.readFile(f).then(setPhoto).catch(function (er) { toast(er.message); });
+  });
+  document.addEventListener('paste', function (e) {
+    var items = (e.clipboardData && e.clipboardData.items) || [];
+    for (var i = 0; i < items.length; i++) {
+      if (/^image\//.test(items[i].type)) {
+        var f = items[i].getAsFile();
+        if (f) { e.preventDefault(); Film.readFile(f).then(setPhoto).catch(function (er) { toast(er.message); }); }
+        return;
+      }
+    }
+  });
+  $('#clearPhoto').addEventListener('click', clearPhoto);
+  $('#swapPhoto').addEventListener('click', function () { fileIn.click(); });
+
+  /* film controls */
+  var SLIDERS = ['grain', 'fade', 'warmth', 'exposure', 'vignette'];
+  SLIDERS.forEach(function (k) {
+    var el = $('#' + k);
+    el.addEventListener('input', function () {
+      state.film[k] = +el.value;
+      el.parentNode.querySelector('i').textContent = el.value;
+      $$('.look').forEach(function (b) { b.classList.remove('is-on'); });
+      state.look = null; reprocess(); saveDraft();
+    });
+  });
+  function syncSliders() {
+    SLIDERS.forEach(function (k) {
+      var el = $('#' + k); el.value = state.film[k];
+      el.parentNode.querySelector('i').textContent = el.value;
+    });
+  }
+  (function buildLooks() {
+    var wrap = $('#looks');
+    Object.keys(Film.LOOKS).forEach(function (key) {
+      var b = document.createElement('button');
+      b.className = 'look' + (key === state.look ? ' is-on' : '');
+      b.textContent = Film.LOOKS[key].label;
+      b.addEventListener('click', function () {
+        state.look = key;
+        SLIDERS.forEach(function (k) { state.film[k] = Film.LOOKS[key][k]; });
+        $$('.look').forEach(function (x) { x.classList.remove('is-on'); });
+        b.classList.add('is-on');
+        syncSliders(); reprocess(); saveDraft();
+      });
+      wrap.appendChild(b);
+    });
+  })();
+
+  /* ── card interaction: tap a word, drag the photo ───────────────────── */
+
+  function cardPoint(e) {
+    var r = card.getBoundingClientRect(), s = card.width / r.width;
+    return { x: (e.clientX - r.left) * s, y: (e.clientY - r.top) * s };
+  }
+
+  var drag = null;
+  card.addEventListener('pointerdown', function (e) {
+    if (!lastFrame) return;
+    var p = cardPoint(e), ph = lastFrame.photo;
+    if (processed && p.x >= ph.x && p.x <= ph.x + ph.w && p.y >= ph.y && p.y <= ph.y + ph.h) {
+      var s = Math.max(ph.w / processed.width, ph.h / processed.height);
+      drag = {
+        x: e.clientX, y: e.clientY, fx: state.focusX, fy: state.focusY, moved: false,
+        ox: processed.width * s - ph.w, oy: processed.height * s - ph.h,
+        scale: card.width / card.getBoundingClientRect().width
+      };
+      card.setPointerCapture(e.pointerId);
+    }
+  });
+  card.addEventListener('pointermove', function (e) {
+    if (!drag) return;
+    var dx = (e.clientX - drag.x) * drag.scale, dy = (e.clientY - drag.y) * drag.scale;
+    if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
+    if (drag.ox > 1) state.focusX = Math.min(1, Math.max(0, drag.fx - dx / drag.ox));
+    if (drag.oy > 1) state.focusY = Math.min(1, Math.max(0, drag.fy - dy / drag.oy));
+    paint();
+  });
+  card.addEventListener('pointerup', function (e) {
+    if (drag) { var m = drag.moved; drag = null; if (m) { saveDraft(); return; } }
+    if (!lastFrame) return;
+    var p = cardPoint(e), pad = Card.SPEC.fontSize * PREVIEW_W * 0.28, b, i;
+    for (i = 0; i < lastFrame.boxes.length; i++) {
+      b = lastFrame.boxes[i];
+      if (p.x >= b.x - 2 && p.x <= b.x + b.w + 2 && p.y >= b.y - pad && p.y <= b.y + b.h + pad) {
+        state.text = Card.toggle(state.text, b.seg);
+        $('#text').value = state.text;
+        paint(); saveDraft(); return;
+      }
+    }
+  });
+  card.addEventListener('pointercancel', function () { drag = null; });
+
+  /* ── editor ─────────────────────────────────────────────────────────── */
+
+  var ta = $('#text');
+  ta.value = state.text;
+  ta.addEventListener('input', function () { state.text = ta.value; paint(); saveDraft(); });
+
+  function doWrap() {
+    var r = Card.wrapRange(ta.value, ta.selectionStart, ta.selectionEnd);
+    if (!r) return;
+    ta.value = state.text = r.text;
+    ta.setSelectionRange(r.caret, r.caret);
+    ta.focus(); paint(); saveDraft();
+  }
+  $('#linkBtn').addEventListener('click', doWrap);
+
+  ['attrib', 'handle'].forEach(function (k) {
+    var el = $('#' + k);
+    el.addEventListener('input', function () { state[k] = el.value; paint(); saveDraft(); });
+  });
+  $('#glyph').addEventListener('change', function () { state.glyph = $('#glyph').checked; paint(); saveDraft(); });
+
+  document.addEventListener('keydown', function (e) {
+    var mod = e.metaKey || e.ctrlKey;
+    if (mod && e.key.toLowerCase() === 'k') { e.preventDefault(); doWrap(); }
+    else if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); savePoem(); }
+    else if (mod && e.shiftKey && e.key.toLowerCase() === 'e') { e.preventDefault(); exportPNG(); }
+  });
+
+  /* ── export ─────────────────────────────────────────────────────────── */
+
+  function slug(s) {
+    return (s || 'poem').toLowerCase().replace(/[\[\]]/g, '').replace(/[^a-z0-9]+/g, '-')
+                        .replace(/^-|-$/g, '').slice(0, 46) || 'poem';
+  }
+
+  function exportPNG() {
+    var W = +$('#size').value;
+    var cv = document.createElement('canvas'), c2 = cv.getContext('2d');
+    var hi = processed;
+    if (img) { var f = frameSize(W); hi = Film.process(img, f.w, f.h, state.film); }   // grain at true size
+    Card.render(c2, W, {
+      text: state.text, attrib: state.attrib, handle: state.handle, glyph: state.glyph,
+      photo: hi, focusX: state.focusX, focusY: state.focusY
+    });
+    var name = slug(Store.title(state.text)) + '.png';
+    if (cv.toBlob) cv.toBlob(function (b) {
+      deliver(b ? { name: name, kind: 'image', blob: b }
+                : { name: name, kind: 'image', url: cv.toDataURL('image/png') });
+    }, 'image/png');
+    else deliver({ name: name, kind: 'image', url: cv.toDataURL('image/png') });
+  }
+  $('#pngBtn').addEventListener('click', exportPNG);
+
+  /* ── shelf ──────────────────────────────────────────────────────────── */
+
+  function snapshot() {
+    return {
+      id: state.id, text: state.text, attrib: state.attrib, handle: state.handle,
+      glyph: state.glyph, look: state.look, film: Object.assign({}, state.film),
+      photoSrc: state.photoSrc, focusX: state.focusX, focusY: state.focusY
+    };
+  }
+
+  var draftT;
+  function saveDraft() {
+    clearTimeout(draftT);
+    draftT = setTimeout(function () { Store.draft(snapshot()); }, 900);
+  }
+
+  function savePoem() {
+    if (!(state.text || '').trim()) { toast('Nothing to save yet.'); return; }
+    var r = Store.save(snapshot());
+    if (!r.ok) {
+      toast(r.full ? 'Browser storage is full — export your shelf, then delete a few.' : 'Could not save.');
+      return;
+    }
+    state.id = r.poem.id;
+    toast('Saved to shelf');
+    if (leftPane === 'shelf') renderShelf();
+  }
+  $('#saveBtn').addEventListener('click', savePoem);
+
+  $('#newBtn').addEventListener('click', function () {
+    if ((state.text || '').trim() && !confirm('Start a new poem? Anything unsaved on this card is lost.')) return;
+    state.id = null; state.text = ''; ta.value = '';
+    clearPhoto(); setPane('write'); ta.focus();
+  });
+
+  function loadPoem(p) {
+    state.id = p.id; state.text = p.text || '';
+    state.attrib = p.attrib || ''; state.handle = p.handle || '';
+    state.glyph = p.glyph !== false; state.look = p.look || null;
+    state.film = Object.assign({}, Film.DEFAULTS, p.film || {});
+    state.focusX = p.focusX == null ? 0.5 : p.focusX;
+    state.focusY = p.focusY == null ? 0.5 : p.focusY;
+    ta.value = state.text; $('#attrib').value = state.attrib; $('#handle').value = state.handle;
+    $('#glyph').checked = state.glyph;
+    $$('.look').forEach(function (b) { b.classList.toggle('is-on', b.textContent === (Film.LOOKS[state.look] || {}).label); });
+    syncSliders();
+    if (p.photoSrc) setPhoto(p.photoSrc, true); else { clearPhoto(); paint(); }
+    setPane('write');
+  }
+
+  function renderShelf() {
+    var list = Store.read(), wrap = $('#shelf');
+    $('#shelfCount').textContent = list.length ? list.length + (list.length === 1 ? ' poem' : ' poems') : '';
+    if (!list.length) { wrap.innerHTML = '<div class="empty">Nothing here yet. Write one and press Save.</div>'; return; }
+    wrap.innerHTML = '';
+    list.forEach(function (p) {
+      var el = document.createElement('div');
+      el.className = 'item' + (p.id === state.id ? ' is-on' : '');
+      var cv = document.createElement('canvas');
+      var meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.innerHTML = '<b>' + esc(p.title || Store.title(p.text)) + '</b><span>' +
+                       new Date(p.updated || Date.now()).toLocaleDateString() + '</span>';
+      var del = document.createElement('button');
+      del.className = 'del'; del.innerHTML = '&times;'; del.title = 'Delete';
+      del.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (!confirm('Delete “' + (p.title || 'this poem') + '”?')) return;
+        Store.remove(p.id); if (state.id === p.id) state.id = null; renderShelf();
+      });
+      el.appendChild(cv); el.appendChild(meta); el.appendChild(del);
+      el.addEventListener('click', function () { loadPoem(p); });
+      wrap.appendChild(el);
+      thumb(cv, p);
+    });
+  }
+
+  function thumb(cv, p) {
+    var c = cv.getContext('2d');
+    var draw = function (photo) {
+      Card.render(c, THUMB_W, {
+        text: p.text, attrib: p.attrib, handle: p.handle, glyph: p.glyph !== false,
+        photo: photo, focusX: p.focusX, focusY: p.focusY
+      });
+    };
+    if (!p.photoSrc) { draw(null); return; }
+    Film.load(p.photoSrc).then(function (im) {
+      var f = frameSize(THUMB_W);
+      draw(Film.process(im, f.w, f.h, Object.assign({}, Film.DEFAULTS, p.film || {})));
+    }).catch(function () { draw(null); });
+  }
+
+  $('#exportAll').addEventListener('click', function () {
+    var text = Store.exportAll();
+    deliver({ name: 'yumbrr-shelf.json', kind: 'text', text: text,
+              blob: new Blob([text], { type: 'application/json' }) });
+  });
+  $('#importAll').addEventListener('click', function () { $('#importFile').click(); });
+  $('#importFile').addEventListener('change', function () {
+    var f = $('#importFile').files[0]; if (!f) return;
+    var fr = new FileReader();
+    fr.onload = function () {
+      var r = Store.importAll(fr.result);
+      toast(r.ok ? 'Added ' + r.added + (r.added === 1 ? ' poem' : ' poems') : r.msg);
+      if (r.ok) renderShelf();
+    };
+    fr.readAsText(f); $('#importFile').value = '';
+  });
+
+  /* ── craft pane ─────────────────────────────────────────────────────── */
+
+  (function buildCraft() {
+    var tools = document.createElement('div');
+    tools.innerHTML =
+      '<h2>Sparks</h2>' +
+      '<p>Half an image each. A cold noun looking for something warm, or the other way round — take one and finish it badly, then fix it.</p>' +
+      '<div class="sparks" id="sparkList"></div>' +
+      '<button class="btn tiny ghost" id="sparkMore">Again</button>' +
+      '<h3>First lines</h3><div class="sparks" id="openerList"></div>' +
+      '<h3>A drill for today</h3><div class="rule" id="drill"></div>';
+    var body = $('#craftBody');
+    body.appendChild(tools);
+    var guide = document.createElement('div');
+    guide.innerHTML = Craft.HTML;
+    body.appendChild(guide);
+
+    function fillSparks() {
+      $('#sparkList').innerHTML = Craft.sparks(6).map(function (s) {
+        return '<span class="spark">' + esc(s.a) + '<b>' + esc(s.b) + '</b></span>';
+      }).join('');
+    }
+    $('#sparkMore').addEventListener('click', fillSparks);
+    fillSparks();
+
+    $('#openerList').innerHTML = Craft.pick(Craft.OPENERS, 4).map(function (o) {
+      return '<span class="spark">' + esc(o) + '</span>';
+    }).join('');
+    $('#drill').innerHTML = Craft.pick(Craft.DRILLS, 1)[0];
+  })();
+
+  /* ── boot ───────────────────────────────────────────────────────────── */
+
+  (function boot() {
+    var d = Store.lastDraft();
+    if (d && typeof d.text === 'string') {
+      state.id = d.id || null; state.text = d.text;
+      state.attrib = d.attrib == null ? state.attrib : d.attrib;
+      state.handle = d.handle || ''; state.glyph = d.glyph !== false;
+      state.look = d.look || null;
+      state.film = Object.assign({}, Film.DEFAULTS, d.film || {});
+      state.focusX = d.focusX == null ? 0.5 : d.focusX;
+      state.focusY = d.focusY == null ? 0.5 : d.focusY;
+      state.photoSrc = d.photoSrc || null;
+    }
+    ta.value = state.text;
+    $('#attrib').value = state.attrib; $('#handle').value = state.handle;
+    $('#glyph').checked = state.glyph;
+    $$('.look').forEach(function (b) { b.classList.toggle('is-on', b.textContent === (Film.LOOKS[state.look] || {}).label); });
+    syncSliders();
+    applyPanes();
+    if (state.photoSrc) setPhoto(state.photoSrc, true); else paint();
+  })();
+})();
+</script>

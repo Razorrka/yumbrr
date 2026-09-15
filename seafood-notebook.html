@@ -1,979 +1,291 @@
 <title>Fish Counter Notebook</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
 <style>
   :root{
-    --ground:#E9EEEF;
-    --surface:#FFFFFF;
-    --sunk:#F2F6F6;
-    --ink:#12222A;
-    --ink-2:#4C616A;
-    --ink-3:#7B8E96;
-    --line:#D3DDDF;
-    --line-2:#E4EAEB;
-    --coral:#C8452F;
-    --coral-soft:#FAEAE6;
-    --teal:#0D6A6E;
-    --teal-soft:#DFEDED;
-    --solo:#1F7A52;
-    --solo-soft:#E0F0E8;
-    --help:#8F5D00;
-    --help-soft:#F8EEDA;
-    --none:#76898F;
-    --none-soft:#E3E9EA;
-    --shadow:0 1px 2px rgba(18,34,42,.06), 0 6px 18px -12px rgba(18,34,42,.28);
+    --ground:#E9EEEF; --surface:#FFFFFF; --sunk:#F2F6F6;
+    --ink:#12222A; --ink-2:#55696F; --ink-3:#8698A0;
+    --line:#D3DDDF; --line-2:#E6ECED;
+    --coral:#C8452F; --teal:#0D6A6E;
     --ui:"Archivo","Helvetica Neue",Arial,sans-serif;
-    --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
-    --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+    --serif:"Source Serif 4",Georgia,serif;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
-      --ground:#0E181C;
-      --surface:#15242B;
-      --sunk:#1B2E35;
-      --ink:#E7EEEF;
-      --ink-2:#A3B6BC;
-      --ink-3:#7C9198;
-      --line:#274049;
-      --line-2:#1F343C;
-      --coral:#F0836A;
-      --coral-soft:#3A2019;
-      --teal:#5CBABD;
-      --teal-soft:#15343A;
-      --solo:#5FC591;
-      --solo-soft:#143126;
-      --help:#E0A845;
-      --help-soft:#332711;
-      --none:#7C9198;
-      --none-soft:#1E3037;
-      --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 18px -12px rgba(0,0,0,.7);
+      --ground:#0E181C; --surface:#15242B; --sunk:#1B2E35;
+      --ink:#E7EEEF; --ink-2:#A3B6BC; --ink-3:#7C9198;
+      --line:#274049; --line-2:#1F343C;
+      --coral:#F0836A; --teal:#5CBABD;
     }
   }
   :root[data-theme="dark"]{
-    --ground:#0E181C;
-    --surface:#15242B;
-    --sunk:#1B2E35;
-    --ink:#E7EEEF;
-    --ink-2:#A3B6BC;
-    --ink-3:#7C9198;
-    --line:#274049;
-    --line-2:#1F343C;
-    --coral:#F0836A;
-    --coral-soft:#3A2019;
-    --teal:#5CBABD;
-    --teal-soft:#15343A;
-    --solo:#5FC591;
-    --solo-soft:#143126;
-    --help:#E0A845;
-    --help-soft:#332711;
-    --none:#7C9198;
-    --none-soft:#1E3037;
-    --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 18px -12px rgba(0,0,0,.7);
+    --ground:#0E181C; --surface:#15242B; --sunk:#1B2E35;
+    --ink:#E7EEEF; --ink-2:#A3B6BC; --ink-3:#7C9198;
+    --line:#274049; --line-2:#1F343C;
+    --coral:#F0836A; --teal:#5CBABD;
   }
-
   *{box-sizing:border-box}
-  body{
-    background:var(--ground);
-    color:var(--ink);
-    font-family:var(--ui);
-    font-size:16px;
-    line-height:1.45;
-    -webkit-text-size-adjust:100%;
-  }
-  .wrap{max-width:660px;margin:0 auto;padding-inline:16px;padding-block:0 64px}
+  html,body{height:100%}
+  body{background:var(--ground);color:var(--ink);font-family:var(--ui);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
+  .wrap{max-width:620px;margin:0 auto;padding-inline:16px;padding-block:18px 40px}
 
-  /* ---------- header ---------- */
-  .top{
-    position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;
-    background:var(--ground);
-    border-bottom:1px solid var(--line);
-    margin-inline:-16px;padding-inline:16px;padding-block:14px 10px;
-  }
-  .eyebrow{
-    font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
-    color:var(--teal);margin:0 0 2px;
-  }
-  h1{
-    font-family:var(--ui);font-weight:800;font-size:26px;line-height:1.05;
-    letter-spacing:-.02em;margin:0;text-wrap:balance;
-  }
-  .sub{
-    font-family:var(--serif);font-size:14px;color:var(--ink-2);
-    margin:6px 0 0;max-width:46ch;
-  }
-  .meter{display:flex;height:8px;border-radius:99px;overflow:hidden;background:var(--none-soft);margin-top:12px;gap:2px}
-  .meter i{display:block;transition:flex-grow .35s ease}
-  .meter .m-solo{background:var(--solo)}
-  .meter .m-help{background:var(--help)}
-  .meter .m-none{background:var(--none);opacity:.42}
-  .tally{
-    display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px;
-    font-size:12px;font-weight:600;color:var(--ink-2);
-  }
-  .tally b{font-family:var(--mono);font-weight:700;color:var(--ink)}
-  .tally span{display:inline-flex;align-items:center;gap:5px}
-  .dot{width:8px;height:8px;border-radius:99px;flex:none}
-  .d-solo{background:var(--solo)}.d-help{background:var(--help)}.d-none{background:var(--none);opacity:.5}
-  .searchrow{display:flex;gap:8px;margin-top:11px}
-  input[type="search"]{
-    flex:1;min-width:0;font-family:var(--ui);font-size:15px;color:var(--ink);
-    background:var(--surface);border:1px solid var(--line);border-radius:9px;
-    padding:9px 12px;
-  }
-  input[type="search"]::placeholder{color:var(--ink-3)}
-  .sync{
-    font-size:11px;font-weight:600;color:var(--ink-3);margin-top:8px;
-    display:flex;align-items:center;gap:6px;
-  }
-  .sync .dot{background:var(--none)}
-  .sync[data-state="cloud"] .dot{background:var(--solo)}
+  h1{font-size:24px;font-weight:700;letter-spacing:-.02em;margin:0}
+  .sub{font-family:var(--serif);font-size:14px;color:var(--ink-2);margin:4px 0 0}
 
-  /* ---------- ask list ---------- */
-  .asks{
-    background:var(--surface);border:1px solid var(--line);border-radius:12px;
-    box-shadow:var(--shadow);margin-top:18px;overflow:hidden;
+  /* ---- list ---- */
+  .list{margin-top:18px;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .row{
+    display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+    background:none;border:0;border-top:1px solid var(--line-2);
+    padding:15px 15px;cursor:pointer;color:var(--ink);font-family:var(--ui);
   }
-  .asks-head{
-    display:flex;align-items:baseline;justify-content:space-between;gap:10px;
-    padding:13px 15px 10px;border-bottom:1px solid var(--line-2);
+  .row:first-child{border-top:0}
+  .row:hover{background:var(--sunk)}
+  .row-main{flex:1;min-width:0}
+  .row-name{font-size:16px;font-weight:600;letter-spacing:-.005em}
+  .row-prev{
+    font-family:var(--serif);font-size:13.5px;color:var(--ink-3);margin-top:2px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
-  .asks-head h2{
-    font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
-    margin:0;color:var(--coral);
-  }
-  .count{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--ink-3)}
-  .asks p.hint{
-    font-family:var(--serif);font-size:13.5px;color:var(--ink-2);
-    margin:0;padding:10px 15px 0;
-  }
-  ul.qlist{list-style:none;margin:0;padding:6px 0}
-  ul.qlist li{display:flex;gap:10px;align-items:flex-start;padding:7px 15px}
-  ul.qlist li + li{border-top:1px solid var(--line-2)}
-  .qbox{
-    flex:none;width:19px;height:19px;margin-top:2px;border-radius:5px;
-    border:1.5px solid var(--line);background:var(--surface);cursor:pointer;
-    display:grid;place-items:center;padding:0;color:transparent;
-    font-size:12px;font-weight:800;line-height:1;
-  }
-  .qbox[aria-pressed="true"]{background:var(--solo);border-color:var(--solo);color:#fff}
-  .qtext{flex:1;font-family:var(--serif);font-size:15px;color:var(--ink);word-break:break-word}
-  .qsrc{display:block;font-family:var(--ui);font-size:11px;font-weight:600;color:var(--ink-3);margin-top:1px}
-  li.done .qtext{text-decoration:line-through;color:var(--ink-3)}
-  .qdel{
-    flex:none;background:none;border:0;color:var(--ink-3);font-size:17px;line-height:1;
-    padding:2px 4px;cursor:pointer;border-radius:5px;
-  }
-  .qdel:hover{color:var(--coral);background:var(--coral-soft)}
-  .addrow{display:flex;gap:8px;padding:9px 15px 13px;border-top:1px solid var(--line-2)}
+  .row-prev.has{color:var(--ink-2)}
+  .arrow{flex:none;width:8px;height:8px;border-right:2px solid var(--ink-3);border-bottom:2px solid var(--ink-3);transform:rotate(-45deg)}
+  .addrow{display:flex;gap:8px;margin-top:12px}
   .addrow input{
-    flex:1;min-width:0;font-family:var(--serif);font-size:15px;color:var(--ink);
-    background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:8px 11px;
+    flex:1;min-width:0;font-family:var(--ui);font-size:15px;color:var(--ink);
+    background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:10px 12px;
   }
   .addrow input::placeholder{color:var(--ink-3)}
-  .btn{
-    font-family:var(--ui);font-size:13px;font-weight:700;cursor:pointer;
-    background:var(--coral);color:#fff;border:0;border-radius:8px;padding:8px 14px;
-  }
+  .btn{font-family:var(--ui);font-size:14px;font-weight:600;cursor:pointer;background:var(--coral);color:#fff;border:0;border-radius:9px;padding:10px 16px}
   .btn:hover{filter:brightness(1.07)}
-  .btn.ghost{background:var(--sunk);color:var(--ink-2);border:1px solid var(--line)}
 
-  /* ---------- stations ---------- */
-  .station{
-    background:var(--surface);border:1px solid var(--line);border-radius:12px;
-    box-shadow:var(--shadow);margin-top:14px;overflow:hidden;
+  /* ---- note ---- */
+  .back{
+    display:inline-flex;align-items:center;gap:7px;background:none;border:0;cursor:pointer;
+    font-family:var(--ui);font-size:14px;font-weight:600;color:var(--teal);padding:0;margin-bottom:12px;
   }
-  .station > summary{
-    list-style:none;cursor:pointer;padding:14px 15px;display:flex;
-    align-items:flex-start;gap:12px;
-  }
-  .station > summary::-webkit-details-marker{display:none}
-  .chev{
-    flex:none;margin-top:3px;width:12px;height:12px;border-right:2px solid var(--ink-3);
-    border-bottom:2px solid var(--ink-3);transform:rotate(-45deg);transition:transform .18s ease;
-  }
-  .station[open] > summary .chev{transform:rotate(45deg)}
-  .st-main{flex:1;min-width:0}
-  .st-main h2{
-    font-size:17px;font-weight:800;letter-spacing:-.01em;margin:0;text-wrap:balance;
-  }
-  .st-main p{font-family:var(--serif);font-size:13.5px;color:var(--ink-2);margin:3px 0 0}
-  .pips{display:flex;gap:3px;margin-top:8px;flex-wrap:wrap}
-  .pip{width:14px;height:5px;border-radius:99px;background:var(--none);opacity:.35}
-  .pip.s1{background:var(--help);opacity:1}
-  .pip.s2{background:var(--solo);opacity:1}
-
-  .item{border-top:1px solid var(--line-2);padding:14px 15px 15px}
-  .item h3{
-    font-size:15px;font-weight:700;margin:0 0 9px;letter-spacing:-.005em;
-    display:flex;gap:8px;align-items:baseline;
-  }
-  .seg{display:flex;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:10px}
-  .seg button{
-    flex:1;font-family:var(--ui);font-size:11.5px;font-weight:700;letter-spacing:.02em;
-    background:var(--surface);color:var(--ink-3);border:0;padding:8px 4px;cursor:pointer;
-    border-right:1px solid var(--line);white-space:nowrap;
-  }
-  .seg button:last-child{border-right:0}
-  .seg button[aria-pressed="true"]{color:#fff}
-  .seg button[data-s="0"][aria-pressed="true"]{background:var(--none)}
-  .seg button[data-s="1"][aria-pressed="true"]{background:var(--help)}
-  .seg button[data-s="2"][aria-pressed="true"]{background:var(--solo)}
-
-  .note{
-    background:var(--teal-soft);border-left:3px solid var(--teal);
-    font-family:var(--serif);font-size:14px;color:var(--ink);
-    padding:9px 12px;border-radius:0 8px 8px 0;margin:0 0 10px;
-  }
-  .note b{font-family:var(--ui);font-size:10.5px;font-weight:800;letter-spacing:.1em;
-    text-transform:uppercase;color:var(--teal);display:block;margin-bottom:3px}
-  .note.warn{background:var(--coral-soft);border-left-color:var(--coral)}
-  .note.warn b{color:var(--coral)}
-
-  .asklabel{
-    font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
-    color:var(--ink-3);margin:0 0 6px;
-  }
-  .prompts{display:flex;flex-direction:column;gap:6px;margin-bottom:11px}
-  .prompt{
-    text-align:left;font-family:var(--serif);font-size:14.5px;color:var(--ink);
-    background:var(--sunk);border:1px solid var(--line-2);border-radius:8px;
-    padding:8px 11px 8px 30px;cursor:pointer;position:relative;line-height:1.35;
-  }
-  .prompt::before{
-    content:"?";position:absolute;left:10px;top:8px;
-    font-family:var(--ui);font-weight:800;font-size:13px;color:var(--coral);
-  }
-  .prompt:hover{border-color:var(--coral);background:var(--coral-soft)}
-  .prompt[data-added="1"]{color:var(--ink-3);border-color:var(--line-2);background:var(--sunk)}
-  .prompt[data-added="1"]::before{content:"\2713";color:var(--solo)}
-
+  .back i{width:8px;height:8px;border-left:2px solid var(--teal);border-bottom:2px solid var(--teal);transform:rotate(45deg)}
+  .note-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+  h2{font-size:21px;font-weight:700;letter-spacing:-.015em;margin:0;text-wrap:balance}
+  .del{background:none;border:0;cursor:pointer;color:var(--ink-3);font-size:13px;font-weight:600;padding:2px 4px}
+  .del:hover{color:var(--coral)}
   textarea{
-    width:100%;font-family:var(--serif);font-size:15.5px;line-height:1.5;color:var(--ink);
-    background:var(--surface);border:1px solid var(--line);border-radius:9px;
-    padding:10px 12px;resize:vertical;min-height:52px;
+    width:100%;margin-top:12px;min-height:58vh;
+    font-family:var(--serif);font-size:17px;line-height:1.6;color:var(--ink);
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    padding:15px;resize:vertical;
   }
   textarea::placeholder{color:var(--ink-3);font-style:italic}
-  textarea:focus,input:focus,button:focus-visible,summary:focus-visible{
-    outline:2px solid var(--coral);outline-offset:2px;
-  }
-
-  /* ---------- julian widget ---------- */
-  .jul{
-    background:var(--sunk);border:1px dashed var(--line);border-radius:9px;
-    padding:11px 12px;margin-bottom:11px;
-  }
-  .jul .jrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  .jul input{
-    width:104px;font-family:var(--mono);font-size:16px;font-weight:700;color:var(--ink);
-    background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:7px 10px;
-  }
-  .jout{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--teal)}
-  .jtoday{font-size:12px;color:var(--ink-3);margin:7px 0 0;font-weight:600}
-  .jtoday code{font-family:var(--mono);color:var(--ink);font-size:13px}
-
-  .additem{
-    display:flex;gap:8px;padding:12px 15px;border-top:1px solid var(--line-2);background:var(--sunk);
-  }
-  .additem input{
-    flex:1;min-width:0;font-family:var(--ui);font-size:14px;color:var(--ink);
-    background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 11px;
-  }
-  .foot{
-    font-family:var(--serif);font-size:13px;color:var(--ink-3);
-    margin:26px 0 0;padding-top:16px;border-top:1px solid var(--line);text-align:left;
-  }
-  .empty{padding:26px 15px;text-align:center;font-family:var(--serif);color:var(--ink-3);font-size:15px}
-  @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+  textarea:focus,input:focus,button:focus-visible{outline:2px solid var(--coral);outline-offset:2px}
+  .saved{font-size:12px;font-weight:600;color:var(--ink-3);margin:8px 0 0;height:16px}
 </style>
 
 <div class="wrap">
-  <header class="top">
-    <p class="eyebrow">Seafood department</p>
+  <div id="view-list">
     <h1>Fish Counter Notebook</h1>
-    <p class="sub">My own notes. What I've been shown, what I can do alone, and what I still need to ask someone.</p>
-    <div class="meter" role="img" id="meter" aria-label="Confidence across all tasks">
-      <i class="m-solo" id="m-solo" style="flex-grow:0"></i>
-      <i class="m-help" id="m-help" style="flex-grow:0"></i>
-      <i class="m-none" id="m-none" style="flex-grow:1"></i>
-    </div>
-    <div class="tally">
-      <span><i class="dot d-solo"></i><b id="t-solo">0</b>&nbsp;can do solo</span>
-      <span><i class="dot d-help"></i><b id="t-help">0</b>&nbsp;need a hand</span>
-      <span><i class="dot d-none"></i><b id="t-none">0</b>&nbsp;not shown yet</span>
-    </div>
-    <div class="searchrow">
-      <input type="search" id="search" placeholder="Search my notes and tasks&hellip;" autocomplete="off">
-    </div>
-    <p class="sync" id="sync" data-state="local"><i class="dot"></i><span id="sync-text">Saving on this device</span></p>
-  </header>
-
-  <section class="asks" aria-labelledby="asks-h">
-    <div class="asks-head">
-      <h2 id="asks-h">Ask my trainer</h2>
-      <span class="count" id="ask-count">0 open</span>
-    </div>
-    <p class="hint">Tap any <strong>?</strong> question further down and it lands here. Check it off once you get the answer &mdash; then write the answer in that task's notes.</p>
-    <ul class="qlist" id="qlist"></ul>
-    <form class="addrow" id="qform">
-      <input id="qinput" placeholder="Something else to ask&hellip;" autocomplete="off">
+    <p class="sub">Tap a topic and write down what you learn. It saves as you type.</p>
+    <div class="list" id="list"></div>
+    <form class="addrow" id="addform">
+      <input id="addinput" placeholder="Add a topic&hellip;" autocomplete="off" aria-label="Add a topic">
       <button class="btn" type="submit">Add</button>
     </form>
-  </section>
+  </div>
 
-  <main id="stations"></main>
-
-  <p class="foot">The blue notes are general food-handling rules, not your store's policy &mdash; every number, ratio and time here is left blank on purpose. Get those from your trainer, the label, or the test strip, and write them in.</p>
+  <div id="view-note" hidden>
+    <button class="back" id="back" type="button"><i></i>All topics</button>
+    <div class="note-head">
+      <h2 id="note-title"></h2>
+      <button class="del" id="del" type="button" hidden>Delete</button>
+    </div>
+    <textarea id="editor" placeholder="Write it down&hellip;" aria-label="Notes"></textarea>
+    <p class="saved" id="saved"></p>
+  </div>
 </div>
 
 <script>
 (function(){
   "use strict";
 
-  var S = [
-    {
-      id:"start", name:"When nobody's told me what to do", open:true,
-      blurb:"The default moves, so a quiet counter never means standing still.",
-      items:[
-        {id:"start-golist", t:"My go-to list when the counter is quiet",
-         asks:["What are three or four things I can always start on my own without asking?","Is there a task list posted somewhere I should be working off?"]},
-        {id:"start-who", t:"Who I go to, in order",
-         asks:["Who is my first ask on each shift?","Who covers when they're on break or off the floor?","How do I reach the department — phone, page, or just walk back?"]},
-        {id:"start-open", t:"Opening routine",
-         asks:["What gets set up before the case opens?","Who builds the ice bed, and when?","What time do I need each thing done by?"]},
-        {id:"start-close", t:"Closing routine",
-         asks:["What has to be finished before I clock out?","What gets pulled, wrapped and iced down at night?","Who checks my work before I leave?"]},
-        {id:"start-breaks", t:"Breaks, clocking, and stepping away",
-         asks:["When do I take my break and who do I tell?","Where do the apron and gloves go when I step away?","What do I do with my hands and gloves when I come back?"]}
-      ]
-    },
-    {
-      id:"counter", name:"The counter — serving people",
-      blurb:"Everything between “Hi, what can I get you?” and handing the package over.",
-      items:[
-        {id:"counter-flow", t:"An order, start to finish",
-         asks:["What's our greeting?","What's the order of operations — pick, weigh, wrap, label, hand over?","Where do I stand so I'm not in anyone's way?"]},
-        {id:"counter-scale", t:"Working the scale",
-         asks:["How do I pull up each product on the scale?","What do I do if the item isn't programmed in?","How do I tare, and does the paper get tared out?","How do I void or reprint a label?"]},
-        {id:"counter-portions", t:"How much do they want — portions",
-         asks:["How many ounces per person do we suggest for fillets? For shrimp? For crab legs?","Which items sell by the piece instead of by the pound?","Am I allowed to go over or under what they asked for, and by how much?"]},
-        {id:"counter-tools", t:"Tongs, gloves, and keeping things apart",
-         asks:["One set of tongs per product, or per species?","When exactly do I change gloves?","Raw and cooked — what's allowed to touch what?"]},
-        {id:"counter-hand", t:"Handing it over",
-         asks:["Do I hand it across the case or set it down for them?","What do I say at the end of the order?","What do I do while they're deciding?"]},
-        {id:"counter-limits", t:"Questions I shouldn't answer myself",
-         note:{k:"General rule", b:"Allergy questions are not a guess. If you are not certain, get someone who is — that is the right answer, not a weak one."},
-         asks:["What do I say when someone asks about allergies?","What do I say to “is this fresh?” or “was this previously frozen?”","Who do I hand a question to when I don't know?"]},
-        {id:"counter-out", t:"When we're out of something",
-         asks:["What do I offer instead?","Do I go check the back, and how long do I make someone wait?","Who do I tell that we're out?"]}
-      ]
-    },
-    {
-      id:"wrap", name:"Wrapping and packing",
-      blurb:"The part customers watch you do. Worth drilling until the hands know it.",
-      items:[
-        {id:"wrap-paper", t:"Paper-wrapping a fillet",
-         asks:["Which paper, and which side faces the fish?","What's the fold — can you show me slowly and let me do the next one?","How tight, and where does the tape go?"]},
-        {id:"wrap-bags", t:"Bags — which one for what",
-         asks:["What goes in plastic, what goes in paper, what goes in a tub?","When do I double-bag?","Where are the spare bags kept up front?"]},
-        {id:"wrap-shellfish", t:"Live shellfish",
-         note:{k:"General rule", b:"Live clams, mussels and oysters are alive and need air — they don't go in a sealed airtight bag, and they don't sit submerged in water."},
-         asks:["What do we bag live shellfish in?","Do they go home on ice, and how do I say that to the customer?","How do I tell if one is already dead before I sell it?"]},
-        {id:"wrap-ice", t:"Long drives and ice packs",
-         asks:["Do I ask how far they're going?","When do I add ice or a gel pack, and where do I get them?","Is there a cutoff — an hour? two? — where I have to offer it?"]},
-        {id:"wrap-hot", t:"Hot and fried items",
-         asks:["What container, and does it need to be vented so it doesn't go soggy?","Do hot and raw items ever share a bag?","What do I write or stick on a hot item?"]},
-        {id:"wrap-label", t:"The label",
-         asks:["Where on the package does the label go?","What's printed on it, and what does each part mean?","What do I do if it prints wrong or doesn't print?"]}
-      ]
-    },
-    {
-      id:"dates", name:"Dates, codes, and tags",
-      blurb:"Reading what's printed on the box, the tag, and our own labels.",
-      items:[
-        {id:"dates-ours", t:"Our own printed labels",
-         asks:["Is the date on our label a packed-on, sell-by, or use-by?","How many days does each item get?","Who prints them, and when during the day?"]},
-        {id:"dates-julian", t:"Three-digit (Julian) codes on cases", julian:true,
-         note:{k:"How it works", b:"A lot of seafood cases are stamped with the day of the year instead of a date: 001 is January 1, 365 is December 31. Some codes put the year first, so 5142 is day 142 of 2025."},
-         asks:["Which of our products use a day-of-year code?","Where on the case or bag is it stamped?","What do I do with the code — does it go anywhere, or is it just for checking age?"]},
-        {id:"dates-kinds", t:"Sell-by vs use-by vs packed-on",
-         asks:["Which date do we actually go by on the floor?","How many days before the date do we pull something?","Does it differ between the case and the back stock?"]},
-        {id:"dates-where", t:"Where the code is printed on each thing",
-         asks:["Case, bag, or tag — where do I look for each product?","What do the codes look like on the ones we get most often?"]},
-        {id:"dates-tags", t:"Shellfish tags",
-         note:{k:"General rule", b:"The tag stays with its container until the container is empty, then gets filed. The FDA Food Code says those tags are kept 90 days from the date the container was emptied."},
-         asks:["Where do our emptied tags get filed?","Who writes the date-emptied on the tag?","Am I allowed to empty a container, or does someone else close that tag out?"]},
-        {id:"dates-expired", t:"Something's out of date — now what",
-         asks:["Do I pull it myself or tell someone first?","Where does pulled product go, and does it get logged?","Who do I tell if I find a whole case that's out?"]},
-        {id:"dates-rotate", t:"Rotation",
-         note:{k:"General rule", b:"FIFO — first in, first out. Oldest product moves to the front and sells first; new stock goes behind it, never on top of it."},
-         asks:["Who rotates the case, and at what point in the day?","Does the back stock get rotated too, and by whom?"]}
-      ]
-    },
-    {
-      id:"clean", name:"Cleaning, and filling the sanitizer",
-      blurb:"Every number below is blank on purpose. Get the real ones from your trainer and the test strip.",
-      items:[
-        {id:"clean-fill", t:"Filling the sanitizer bucket",
-         note:{k:"General rule", b:"Mix it, then test it with a strip — the strip is the answer, not the pour. Chlorine sanitizer for food-contact surfaces usually targets somewhere around 50–100 ppm, but confirm your store's number and write it here."},
-         asks:["What is our exact ratio — how much sanitizer to how much water?","Hot water or cold?","Where are the test strips, and what color am I looking for?","Where do I log it once it's mixed?"]},
-        {id:"clean-change", t:"How often the bucket gets changed",
-         asks:["Every how many hours, or on what trigger?","What makes a bucket dead besides time — cloudy? dirty cloth?","Who's responsible for it on my shift?"]},
-        {id:"clean-wrs", t:"Wash, rinse, sanitize",
-         note:{k:"General rule", b:"Three steps in order, then air dry. Towel-drying a sanitized surface undoes the third step."},
-         asks:["Which sink is which?","How long does something sit in the sanitizer?","Where do things air dry?"]},
-        {id:"clean-tables", t:"Wiping down tables and the cutting board",
-         asks:["Cloth out of the bucket, or a fresh one each time?","How often during a shift?","What comes off the table before I wipe it?"]},
-        {id:"clean-case", t:"The case and the ice bed",
-         asks:["When does the ice get broken down and rebuilt?","Where does the product go while I do it?","How do I drain it, and what about the pans underneath?"]},
-        {id:"clean-floor", t:"Floors, drains, and hoses",
-         asks:["What's the end-of-night floor routine?","Where's the hose, and what's the rule about spraying anywhere near product?","Who does the drains?"]},
-        {id:"clean-chem", t:"Chemicals, PPE, and the binder",
-         note:{k:"Safety", w:true, b:"Never mix chemicals. Bleach with ammonia or with an acid cleaner makes a toxic gas. One chemical, one bucket, and never top off a bucket with something else."},
-         asks:["Where do the chemicals live, and which is which?","Gloves or goggles — what's required for what?","Where's the safety data sheet binder kept?"]}
-      ]
-    },
-    {
-      id:"back", name:"The back room and where things live",
-      blurb:"This is the one that makes you independent fastest. Write the map down in your own words.",
-      items:[
-        {id:"back-map", t:"The supply rack — my own map",
-         asks:["Which rack and which shelf for paper, bags, labels, gloves, boats and tubs?","What's stored high that I'll need a step stool for?","Is anything kept somewhere that isn't obvious?"]},
-        {id:"back-gloves", t:"Gloves, aprons, and cut gloves",
-         asks:["Where are the different sizes kept?","How many do I take at a time?","What do I do with a used apron at the end of the night?"]},
-        {id:"back-paper", t:"Label and scale paper",
-         asks:["Where's the spare roll?","How do I load it — can you show me once?","Who do I tell when I take the last one?"]},
-        {id:"back-cooler", t:"The cooler",
-         asks:["What lives on which shelf?","What's the rule about what sits above or below what?","What's the temperature supposed to be, and do I check it?"]},
-        {id:"back-freezer", t:"The freezer",
-         asks:["What's kept in there?","How long does each thing take to thaw, and where does it thaw?","Am I allowed to pull things out on my own?"]},
-        {id:"back-outof", t:"When something runs out",
-         asks:["Who do I tell?","Is there a list I write it on, and where is it?","How far ahead should I be flagging it?"]},
-        {id:"back-carry", t:"Bringing stock up front",
-         asks:["What do I carry it in?","Does anything get logged or scanned on the way up?","What's the safe way to carry the heavy ones?"]}
-      ]
-    },
-    {
-      id:"kitchen", name:"The other kitchen",
-      blurb:"The cook side. Mostly a question of what you're actually cleared to touch.",
-      items:[
-        {id:"kitchen-allowed", t:"Am I allowed over there, and when",
-         asks:["Am I cleared to work that side on my own yet?","Who do I tell when I go over?","What's my job over there versus what's someone else's?"]},
-        {id:"kitchen-fryer", t:"The fryer",
-         asks:["Am I trained and signed off on it?","What are the basket rules and the timers?","What do I do if oil splashes or something catches?","Who filters or changes the oil?"]},
-        {id:"kitchen-steam", t:"The steamer",
-         asks:["What goes in it, and for how long?","How do I open it without getting burned?","Who cleans it?"]},
-        {id:"kitchen-hot", t:"The hot case",
-         asks:["How long does each item hold before it comes out?","What temperature do we check, how often, and with what?","Where's the temperature log and do I sign it?"]},
-        {id:"kitchen-timers", t:"Timers and labels on cooked food",
-         asks:["What time goes on a cooked item — made at, or pull by?","Where does that label go?","What happens to it when the time is up?"]},
-        {id:"kitchen-cleankitchen", t:"Cleaning that side",
-         asks:["What over there is mine to clean at the end of the night?","What do I use on each surface?","What am I not supposed to touch?"]}
-      ]
-    },
-    {
-      id:"knife", name:"Knives and equipment",
-      blurb:"Start with permission, not technique. The first question is whether you're cleared at all.",
-      items:[
-        {id:"knife-cleared", t:"Am I cleared to use a knife here",
-         note:{k:"Ask before you pick one up", w:true, b:"Plenty of stores require a sign-off before you use knives or power equipment, and some machines have age restrictions by law. Being handed a knife once is not the same as being cleared."},
-         asks:["Am I signed off on knives?","What am I allowed to cut on my own right now?","What still needs someone watching me?"]},
-        {id:"knife-which", t:"Which knife for which job",
-         asks:["Which one for filleting, which for portioning, which for cutting through shell or bone?","Which one should I not be reaching for?","Where's the one I'm supposed to use?"]},
-        {id:"knife-cutglove", t:"Cut gloves",
-         asks:["When is a cut glove required?","Where do I get one in my size?","How does it get washed, and where does it go after?"]},
-        {id:"knife-grip", t:"The grip and the guide hand",
-         note:{k:"General rule", b:"Cut away from yourself, keep the guide hand's fingertips curled back behind the knuckles, and never try to catch a knife you've dropped — step back and let it land."},
-         asks:["Can you show me the grip and where my other hand goes?","What's the safe way to do the cut I'll be doing most?","What am I doing wrong right now that I can't see?"]},
-        {id:"knife-storage", t:"Where knives live and how they get washed",
-         note:{k:"Safety", w:true, b:"A knife never goes into a sink full of water where someone can't see it — that's how hands get cut. It gets washed on its own and put back."},
-         asks:["Where do they go when I'm not using them?","How and where do they get washed?","Who's responsible for them at the end of the night?"]},
-        {id:"knife-sharp", t:"Sharpening and steeling",
-         asks:["Who sharpens them?","Am I allowed to steel one, and can you show me?","Who do I tell when one is dull?"]},
-        {id:"knife-cut", t:"If I cut myself",
-         note:{k:"If it happens", w:true, b:"Stop, cover it, tell someone immediately. It gets reported and logged, and product near it usually has to be pulled. Nobody is annoyed at you for reporting it — they're annoyed when they find out late."},
-         asks:["Where's the first aid kit?","Who do I report to, and what form gets filled out?","What happens to the product and the board?"]},
-        {id:"knife-equip", t:"Other equipment",
-         asks:["What else am I cleared for — band saw, slicer, grinder, wrapper?","Which machines am I not allowed to touch at all?","Who do I ask to get trained on the next one?"]}
-      ]
-    }
+  var BUILTIN = [
+    {id:"handing",  name:"Handing out food"},
+    {id:"wrapping", name:"Wrapping food"},
+    {id:"dates",    name:"Reading dates on food"},
+    {id:"cleaning", name:"Cleaning tables"},
+    {id:"bleach",   name:"Filling the bleach"},
+    {id:"supplies", name:"Where supplies are in the back"},
+    {id:"kitchen",  name:"The other kitchen"},
+    {id:"knife",    name:"Using a knife"},
+    {id:"ask",      name:"Stuff to ask about"},
+    {id:"misc",     name:"Everything else"}
   ];
 
-  var SEED_Q = [
-    {t:"What's our exact sanitizer ratio, and where are the test strips?", s:"Cleaning, and filling the sanitizer"},
-    {t:"Am I signed off on knives, and what am I allowed to cut alone?", s:"Knives and equipment"},
-    {t:"What are three things I can always start on my own when it's quiet?", s:"When nobody's told me what to do"},
-    {t:"Can you walk me through the paper wrap once slowly?", s:"Wrapping and packing"},
-    {t:"Which date on our label do we go by, and how many days does each item get?", s:"Dates, codes, and tags"}
-  ];
+  var KEY = "fish-counter-notes-v2";
+  var state = {notes:{}, custom:[], updated:0};
+  var dbRef = null, writing = false, dirty = false, timer = null, adopted = false, current = null;
 
-  var LABELS = ["Not shown","With help","On my own"];
-  var KEY = "fish-counter-notebook-v1";
-  var state = {v:1, items:{}, qs:[], custom:[], updated:0};
-  var dbRef = null, writing = false, dirty = false, saveTimer = null, adopted = false;
-
-  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  var $ = function(id){ return document.getElementById(id); };
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
   function normalize(o){
-    var n = {v:1, items:{}, qs:[], custom:[], updated:0};
+    var n = {notes:{}, custom:[], updated:0};
     if(!o || typeof o !== "object") return n;
-    if(o.items && typeof o.items === "object"){
-      Object.keys(o.items).forEach(function(k){
-        var it = o.items[k];
-        if(it && typeof it === "object"){
-          n.items[k] = {s: Math.min(2, Math.max(0, parseInt(it.s,10)||0)), n: typeof it.n === "string" ? it.n : ""};
-        }
+    if(o.notes && typeof o.notes === "object"){
+      Object.keys(o.notes).forEach(function(k){
+        if(typeof o.notes[k] === "string") n.notes[k] = o.notes[k];
       });
     }
-    if(Array.isArray(o.qs)) n.qs = o.qs.filter(function(q){ return q && typeof q.t === "string"; })
-      .map(function(q){ return {id: q.id || uid(), t: q.t, s: typeof q.s === "string" ? q.s : "", done: !!q.done}; });
-    if(Array.isArray(o.custom)) n.custom = o.custom.filter(function(c){ return c && typeof c.t === "string" && typeof c.sec === "string"; })
-      .map(function(c){ return {id: c.id || uid(), sec: c.sec, t: c.t}; });
+    if(Array.isArray(o.custom)){
+      n.custom = o.custom.filter(function(c){ return c && typeof c.name === "string"; })
+        .map(function(c){ return {id: c.id || uid(), name: c.name}; });
+    }
     n.updated = typeof o.updated === "number" ? o.updated : 0;
     return n;
   }
 
-  function hasContent(){
-    if(state.custom.length) return true;
-    if(state.qs.some(function(q){ return q.done || !q.seeded; })) return true;
-    return Object.keys(state.items).some(function(k){
-      var it = state.items[k];
-      return it && (it.s > 0 || (it.n && it.n.trim()));
-    });
+  function topics(){ return BUILTIN.concat(state.custom); }
+  function nameOf(id){
+    var t = topics().filter(function(x){ return x.id === id; })[0];
+    return t ? t.name : "";
   }
 
-  function loadLocal(){
+  function load(){
     try{
       var raw = localStorage.getItem(KEY);
       if(raw) state = normalize(JSON.parse(raw));
-    }catch(e){ /* private window, blocked storage — carry on empty */ }
-    if(!state.qs.length){
-      state.qs = SEED_Q.map(function(q){ return {id: uid(), t: q.t, s: q.s, done: false}; });
-    }
+    }catch(e){ /* blocked storage — carry on empty */ }
   }
-
   function saveLocal(){
     try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){ /* nothing to do */ }
   }
-
   function touch(){
     state.updated = Date.now();
     saveLocal();
-    if(saveTimer) clearTimeout(saveTimer);
-    saveTimer = setTimeout(push, 700);
+    if(timer) clearTimeout(timer);
+    timer = setTimeout(push, 600);
   }
-
   function push(){
     if(!dbRef) return;
     if(writing){ dirty = true; return; }
     writing = true;
-    var body = {v:1, items: state.items, qs: state.qs, custom: state.custom, updated: state.updated};
-    dbRef.set(body).then(function(){
+    dbRef.set({notes: state.notes, custom: state.custom, updated: state.updated}).then(function(){
       writing = false;
       if(dirty){ dirty = false; push(); }
     }).catch(function(err){
       writing = false;
-      if(err && (err.code === "unavailable")){ setTimeout(push, 1500 + Math.random()*1500); }
-      else if(err && (err.code === "revoked" || err.code === "not_granted")){ dbRef = null; setSync("local"); }
+      if(err && err.code === "unavailable"){ setTimeout(push, 1500 + Math.random()*1500); }
+      else if(err && (err.code === "revoked" || err.code === "not_granted")){ dbRef = null; }
     });
   }
 
-  function setSync(mode){
-    var el = document.getElementById("sync");
-    el.dataset.state = mode;
-    document.getElementById("sync-text").textContent =
-      mode === "cloud" ? "Synced — your notes follow you to any device" : "Saving on this device";
+  function firstLine(txt){
+    if(!txt) return "";
+    var l = txt.split("\n").filter(function(s){ return s.trim(); })[0] || "";
+    return l.length > 70 ? l.slice(0,70) + "…" : l;
   }
 
-  /* ---------------- date-code converter ---------------- */
-  function mkDate(y, doy){
-    if(!(doy >= 1 && doy <= 366)) return null;
-    var d = new Date(y, 0, doy);
-    return d.getFullYear() === y ? d : null;
-  }
-  function decodeCode(raw){
-    var s = String(raw).replace(/[^0-9]/g, "");
-    if(!s) return null;
-    var now = new Date(), cy = now.getFullYear(), y, doy, d, assumed = false;
-    if(s.length === 3){
-      doy = parseInt(s, 10); y = cy; assumed = true;
-      d = mkDate(y, doy);
-      if(d && d.getTime() > now.getTime() + 864e5){ y = cy - 1; d = mkDate(y, doy); }
-    } else if(s.length === 4){
-      var last = parseInt(s.charAt(0), 10);
-      doy = parseInt(s.slice(1), 10);
-      y = cy - (((cy % 10) - last) + 10) % 10;
-      d = mkDate(y, doy);
-    } else if(s.length === 5){
-      y = 2000 + parseInt(s.slice(0, 2), 10);
-      doy = parseInt(s.slice(2), 10);
-      d = mkDate(y, doy);
-    } else return null;
-    if(!d) return null;
-    var t0 = new Date(); t0.setHours(0,0,0,0);
-    var age = Math.round((t0.getTime() - d.getTime()) / 864e5);
-    return {date: d, age: age, assumed: assumed};
-  }
-  function fmt(d){
-    return d.toLocaleDateString(undefined, {weekday:"short", month:"short", day:"numeric", year:"numeric"});
-  }
-  function todayDoy(){
-    var now = new Date(), start = new Date(now.getFullYear(), 0, 1);
-    return Math.floor((now - start) / 864e5) + 1;
-  }
-  function julianWidget(){
-    var box = document.createElement("div");
-    box.className = "jul";
-    var row = document.createElement("div");
-    row.className = "jrow";
-    var lab = document.createElement("label");
-    lab.className = "asklabel";
-    lab.style.margin = "0";
-    lab.setAttribute("for", "jul-in");
-    lab.textContent = "Decode a code";
-    var inp = document.createElement("input");
-    inp.id = "jul-in"; inp.type = "text"; inp.inputMode = "numeric";
-    inp.placeholder = "142"; inp.maxLength = 5; inp.autocomplete = "off";
-    var out = document.createElement("span");
-    out.className = "jout";
-    out.textContent = "—";
-    row.appendChild(lab); row.appendChild(inp); row.appendChild(out);
-    var today = document.createElement("p");
-    today.className = "jtoday";
-    var dd = String(todayDoy());
-    while(dd.length < 3) dd = "0" + dd;
-    today.innerHTML = "Today is day <code>" + dd + "</code> of " + new Date().getFullYear() +
-      ". Type 3 digits for this year, or 4–5 with the year first (<code>5142</code>, <code>25142</code>).";
-    inp.addEventListener("input", function(){
-      var r = decodeCode(inp.value);
-      if(!r){ out.textContent = inp.value ? "not a day-of-year code" : "—"; return; }
-      var ageTxt = r.age === 0 ? "today" : r.age === 1 ? "1 day ago" :
-        r.age < 0 ? Math.abs(r.age) + " days from now" : r.age + " days ago";
-      out.textContent = fmt(r.date) + " · " + ageTxt + (r.assumed ? " (assuming this year)" : "");
-    });
-    box.appendChild(row); box.appendChild(today);
-    return box;
-  }
-
-  /* ---------------- rendering ---------------- */
-  function getItem(id){
-    if(!state.items[id]) state.items[id] = {s:0, n:""};
-    return state.items[id];
-  }
-
-  function buildItem(def, sec){
-    var art = document.createElement("article");
-    art.className = "item";
-    art.dataset.item = def.id;
-
-    var h3 = document.createElement("h3");
-    var span = document.createElement("span");
-    span.textContent = def.t;
-    h3.appendChild(span);
-    if(def.custom){
-      var del = document.createElement("button");
-      del.type = "button"; del.className = "qdel"; del.title = "Remove this one";
-      del.textContent = "×";
-      del.addEventListener("click", function(){
-        state.custom = state.custom.filter(function(c){ return c.id !== def.id; });
-        delete state.items[def.id];
-        art.remove(); touch(); paintMeter();
-      });
-      h3.appendChild(del);
-    }
-    art.appendChild(h3);
-
-    var seg = document.createElement("div");
-    seg.className = "seg";
-    seg.setAttribute("role", "group");
-    seg.setAttribute("aria-label", "How well I know: " + def.t);
-    LABELS.forEach(function(lab, i){
+  function renderList(){
+    var box = $("list");
+    box.textContent = "";
+    topics().forEach(function(t){
       var b = document.createElement("button");
-      b.type = "button"; b.dataset.s = String(i); b.textContent = lab;
-      b.setAttribute("aria-pressed", String(getItem(def.id).s === i));
-      b.addEventListener("click", function(){
-        getItem(def.id).s = i;
-        paintSeg(seg, i); paintMeter(); touch();
-      });
-      seg.appendChild(b);
-    });
-    art.appendChild(seg);
-
-    if(def.note){
-      var n = document.createElement("p");
-      n.className = "note" + (def.note.w ? " warn" : "");
-      var k = document.createElement("b");
-      k.textContent = def.note.k;
-      n.appendChild(k);
-      n.appendChild(document.createTextNode(def.note.b));
-      art.appendChild(n);
-    }
-
-    if(def.julian) art.appendChild(julianWidget());
-
-    if(def.asks && def.asks.length){
-      var al = document.createElement("p");
-      al.className = "asklabel";
-      al.textContent = "Questions to ask — tap to add";
-      art.appendChild(al);
-      var wrapP = document.createElement("div");
-      wrapP.className = "prompts";
-      def.asks.forEach(function(q){
-        var b = document.createElement("button");
-        b.type = "button"; b.className = "prompt"; b.textContent = q;
-        if(state.qs.some(function(x){ return x.t === q; })) b.dataset.added = "1";
-        b.addEventListener("click", function(){
-          if(b.dataset.added === "1") return;
-          state.qs.unshift({id: uid(), t: q, s: sec.name, done: false});
-          b.dataset.added = "1";
-          renderQs(); touch();
-        });
-        wrapP.appendChild(b);
-      });
-      art.appendChild(wrapP);
-    }
-
-    var ta = document.createElement("textarea");
-    ta.id = "n-" + def.id;
-    ta.rows = 2;
-    ta.setAttribute("aria-label", "My notes on " + def.t);
-    ta.placeholder = "How we actually do it here…";
-    ta.value = getItem(def.id).n;
-    ta.addEventListener("input", function(){
-      getItem(def.id).n = ta.value;
-      autosize(ta); touch();
-    });
-    art.appendChild(ta);
-    requestAnimationFrame(function(){ autosize(ta); });
-    return art;
-  }
-
-  function autosize(ta){
-    ta.style.height = "auto";
-    ta.style.height = Math.max(52, ta.scrollHeight + 2) + "px";
-  }
-
-  function paintSeg(seg, v){
-    Array.prototype.forEach.call(seg.querySelectorAll("button"), function(b){
-      b.setAttribute("aria-pressed", String(parseInt(b.dataset.s, 10) === v));
-    });
-  }
-
-  function renderStations(){
-    var root = document.getElementById("stations");
-    root.textContent = "";
-    S.forEach(function(sec){
-      var d = document.createElement("details");
-      d.className = "station";
-      d.dataset.sec = sec.id;
-      if(sec.open) d.open = true;
-
-      var sum = document.createElement("summary");
-      var chev = document.createElement("i");
-      chev.className = "chev";
+      b.type = "button"; b.className = "row";
       var main = document.createElement("div");
-      main.className = "st-main";
-      var h2 = document.createElement("h2");
-      h2.textContent = sec.name;
-      var p = document.createElement("p");
-      p.textContent = sec.blurb;
-      var pips = document.createElement("div");
-      pips.className = "pips";
-      main.appendChild(h2); main.appendChild(p); main.appendChild(pips);
-      sum.appendChild(chev); sum.appendChild(main);
-      d.appendChild(sum);
-
-      var body = document.createElement("div");
-      body.className = "st-body";
-      sec.items.forEach(function(def){ body.appendChild(buildItem(def, sec)); });
-      state.custom.filter(function(c){ return c.sec === sec.id; }).forEach(function(c){
-        body.appendChild(buildItem({id: c.id, t: c.t, custom: true}, sec));
-      });
-      d.appendChild(body);
-
-      var form = document.createElement("form");
-      form.className = "additem";
-      var inp = document.createElement("input");
-      inp.placeholder = "Add something else from this station…";
-      inp.autocomplete = "off";
-      inp.setAttribute("aria-label", "Add a task to " + sec.name);
-      var btn = document.createElement("button");
-      btn.className = "btn ghost"; btn.type = "submit"; btn.textContent = "Add";
-      form.appendChild(inp); form.appendChild(btn);
-      form.addEventListener("submit", function(e){
-        e.preventDefault();
-        var t = inp.value.trim();
-        if(!t) return;
-        var rec = {id: uid(), sec: sec.id, t: t};
-        state.custom.push(rec);
-        body.appendChild(buildItem({id: rec.id, t: t, custom: true}, sec));
-        inp.value = "";
-        paintMeter(); touch();
-      });
-      d.appendChild(form);
-      root.appendChild(d);
-    });
-    paintMeter();
-  }
-
-  function sectionItemIds(sec){
-    var ids = sec.items.map(function(i){ return i.id; });
-    state.custom.forEach(function(c){ if(c.sec === sec.id) ids.push(c.id); });
-    return ids;
-  }
-
-  function paintMeter(){
-    var counts = [0,0,0];
-    S.forEach(function(sec){
-      var pips = document.querySelector('.station[data-sec="' + sec.id + '"] .pips');
-      if(pips) pips.textContent = "";
-      sectionItemIds(sec).forEach(function(id){
-        var s = getItem(id).s;
-        counts[s]++;
-        if(pips){
-          var pip = document.createElement("i");
-          pip.className = "pip" + (s ? " s" + s : "");
-          pips.appendChild(pip);
-        }
-      });
-    });
-    var total = counts[0] + counts[1] + counts[2] || 1;
-    document.getElementById("m-solo").style.flexGrow = String(counts[2]);
-    document.getElementById("m-help").style.flexGrow = String(counts[1]);
-    document.getElementById("m-none").style.flexGrow = String(counts[0]);
-    document.getElementById("t-solo").textContent = counts[2];
-    document.getElementById("t-help").textContent = counts[1];
-    document.getElementById("t-none").textContent = counts[0];
-    document.getElementById("meter").setAttribute("aria-label",
-      counts[2] + " of " + total + " tasks I can do on my own");
-  }
-
-  function renderQs(){
-    var ul = document.getElementById("qlist");
-    ul.textContent = "";
-    if(!state.qs.length){
-      var li = document.createElement("li");
-      li.className = "empty";
-      li.textContent = "Nothing to ask right now. Tap a ? below when something comes up.";
-      ul.appendChild(li);
-    }
-    state.qs.forEach(function(q){
-      var li = document.createElement("li");
-      if(q.done) li.className = "done";
-      var box = document.createElement("button");
-      box.type = "button"; box.className = "qbox"; box.textContent = "✓";
-      box.setAttribute("aria-pressed", String(!!q.done));
-      box.setAttribute("aria-label", q.done ? "Mark as still unanswered" : "Mark as answered");
-      box.addEventListener("click", function(){ q.done = !q.done; renderQs(); touch(); });
-      var txt = document.createElement("div");
-      txt.className = "qtext";
-      txt.appendChild(document.createTextNode(q.t));
-      if(q.s){
-        var src = document.createElement("span");
-        src.className = "qsrc";
-        src.textContent = q.s;
-        txt.appendChild(src);
-      }
-      var del = document.createElement("button");
-      del.type = "button"; del.className = "qdel"; del.textContent = "×";
-      del.setAttribute("aria-label", "Delete this question");
-      del.addEventListener("click", function(){
-        state.qs = state.qs.filter(function(x){ return x.id !== q.id; });
-        renderQs(); touch(); refreshPrompts();
-      });
-      li.appendChild(box); li.appendChild(txt); li.appendChild(del);
-      ul.appendChild(li);
-    });
-    var open = state.qs.filter(function(q){ return !q.done; }).length;
-    document.getElementById("ask-count").textContent = open + " open";
-  }
-
-  function refreshPrompts(){
-    Array.prototype.forEach.call(document.querySelectorAll(".prompt"), function(b){
-      b.dataset.added = state.qs.some(function(x){ return x.t === b.textContent; }) ? "1" : "";
+      main.className = "row-main";
+      var n = document.createElement("div");
+      n.className = "row-name";
+      n.textContent = t.name;
+      var p = document.createElement("div");
+      var txt = firstLine(state.notes[t.id]);
+      p.className = "row-prev" + (txt ? " has" : "");
+      p.textContent = txt || "Empty";
+      main.appendChild(n); main.appendChild(p);
+      var a = document.createElement("i");
+      a.className = "arrow";
+      b.appendChild(main); b.appendChild(a);
+      b.addEventListener("click", function(){ open(t.id); });
+      box.appendChild(b);
     });
   }
 
-  function applyState(){
-    Array.prototype.forEach.call(document.querySelectorAll(".item"), function(art){
-      var id = art.dataset.item;
-      var rec = state.items[id] || {s:0, n:""};
-      paintSeg(art.querySelector(".seg"), rec.s);
-      var ta = art.querySelector("textarea");
-      if(ta && document.activeElement !== ta && ta.value !== rec.n){
-        ta.value = rec.n;
-        autosize(ta);
-      }
-    });
-    paintMeter(); renderQs(); refreshPrompts();
+  function open(id){
+    current = id;
+    $("note-title").textContent = nameOf(id);
+    var ed = $("editor");
+    ed.value = state.notes[id] || "";
+    $("saved").textContent = "";
+    $("del").hidden = !state.custom.some(function(c){ return c.id === id; });
+    $("view-list").hidden = true;
+    $("view-note").hidden = false;
+    window.scrollTo(0,0);
+    ed.focus();
   }
 
-  /* ---------------- search ---------------- */
-  function haystack(art){
-    var id = art.dataset.item;
-    return (art.textContent + " " + (state.items[id] ? state.items[id].n : "")).toLowerCase();
+  function close(){
+    current = null;
+    $("view-note").hidden = true;
+    $("view-list").hidden = false;
+    renderList();
+    window.scrollTo(0,0);
   }
-  document.getElementById("search").addEventListener("input", function(e){
-    var q = e.target.value.trim().toLowerCase();
-    Array.prototype.forEach.call(document.querySelectorAll(".station"), function(st){
-      var shown = 0;
-      Array.prototype.forEach.call(st.querySelectorAll(".item"), function(art){
-        var hit = !q || haystack(art).indexOf(q) !== -1;
-        art.hidden = !hit;
-        if(hit) shown++;
-      });
-      st.hidden = q && !shown;
-      var form = st.querySelector(".additem");
-      if(form) form.hidden = !!q;
-      if(q && shown) st.open = true;
-      if(!q) st.open = st.dataset.sec === S[0].id;
-    });
+
+  $("back").addEventListener("click", close);
+
+  $("editor").addEventListener("input", function(e){
+    if(!current) return;
+    state.notes[current] = e.target.value;
+    $("saved").textContent = "Saved";
+    touch();
   });
 
-  document.getElementById("qform").addEventListener("submit", function(e){
+  $("del").addEventListener("click", function(){
+    if(!current) return;
+    if(!window.confirm("Delete “" + nameOf(current) + "” and its notes?")) return;
+    state.custom = state.custom.filter(function(c){ return c.id !== current; });
+    delete state.notes[current];
+    touch(); close();
+  });
+
+  $("addform").addEventListener("submit", function(e){
     e.preventDefault();
-    var inp = document.getElementById("qinput");
-    var t = inp.value.trim();
-    if(!t) return;
-    state.qs.unshift({id: uid(), t: t, s: "", done: false});
+    var inp = $("addinput"), name = inp.value.trim();
+    if(!name) return;
+    var rec = {id: uid(), name: name};
+    state.custom.push(rec);
     inp.value = "";
-    renderQs(); touch(); refreshPrompts();
+    touch(); renderList(); open(rec.id);
   });
 
-  /* ---------------- boot ---------------- */
-  loadLocal();
-  renderStations();
-  renderQs();
+  load();
+  renderList();
 
-  (function connect(){
-    if(!(window.claude && typeof window.claude.use === "function")) return;
+  if(window.claude && typeof window.claude.use === "function"){
     window.claude.use("db").then(function(db){
       if(!db) return;
-      dbRef = db.doc("notebook/state");
-      setSync("cloud");
+      dbRef = db.doc("notes/state");
       dbRef.onSnapshot(function(snap){
         if(snap.metadata && snap.metadata.hasPendingWrites) return;
         var remote = snap.exists ? snap.data() : null;
         if(!remote){
-          if(!adopted){ adopted = true; if(hasContent()) push(); }
+          if(!adopted){ adopted = true; if(Object.keys(state.notes).length || state.custom.length) push(); }
           return;
         }
         var r = normalize(remote);
         if(!adopted){
           adopted = true;
-          if(r.updated >= (state.updated || 0)){
-            var qs = state.qs;
-            state = r;
-            if(!state.qs.length) state.qs = qs;
-            saveLocal(); applyState();
-          } else { push(); }
-          return;
+          if(r.updated < (state.updated || 0)){ push(); return; }
+        } else if(r.updated <= (state.updated || 0)) return;
+        state = r;
+        saveLocal();
+        if(current){
+          var ed = $("editor");
+          var incoming = state.notes[current] || "";
+          if(document.activeElement !== ed && ed.value !== incoming) ed.value = incoming;
+          $("del").hidden = !state.custom.some(function(c){ return c.id === current; });
+        } else {
+          renderList();
         }
-        if(r.updated > (state.updated || 0)){ state = r; saveLocal(); applyState(); }
-      }, function(err){
-        if(err && err.code !== "unavailable"){ dbRef = null; setSync("local"); }
-      });
+      }, function(){ dbRef = null; });
     }).catch(function(){ /* stays local */ });
-  })();
+  }
 })();
 </script>

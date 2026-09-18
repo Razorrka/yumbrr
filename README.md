@@ -13,7 +13,12 @@ Handing out food · Wrapping food · Reading dates on food · Cleaning tables ·
 Filling the bleach · Where supplies are in the back · The other kitchen ·
 Using a knife · Stuff to ask about · Everything else
 
-You can add your own topics; added ones can be deleted.
+You can add your own topics. **Edit** turns on reordering (up/down per row) and
+delete on every row, built-in ones included.
+
+Order and deletions are stored as `order` and `removed` id lists rather than by
+rewriting the topic list, so notes stay keyed to stable topic ids and a topic
+added on another device is appended rather than dropped.
 
 ### Notes on the source
 

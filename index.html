@@ -133,6 +133,28 @@
   textarea::placeholder{color:var(--ink-3);font-style:italic}
   textarea:focus,input:focus,button:focus-visible{outline:2px solid var(--coral);outline-offset:2px}
   .saved{font-size:12px;font-weight:600;color:var(--ink-3);margin:8px 0 0;height:16px}
+
+  /* ---- today's shift ---- */
+  .today{margin-top:18px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 15px 15px}
+  .today-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
+  .today-title{font-size:16px;font-weight:700;letter-spacing:-.01em;margin:0}
+  .today-date{font-family:var(--serif);font-size:13px;color:var(--ink-2);margin:2px 0 0}
+  .today-count{flex:none;font-size:12px;font-weight:700;color:var(--teal);background:var(--sunk);border-radius:20px;padding:4px 10px}
+  .chk{display:flex;align-items:center;gap:4px;border-top:1px solid var(--line-2)}
+  .chk:first-child{border-top:0}
+  .chk-tog{
+    flex:1;min-width:0;display:flex;align-items:center;gap:11px;text-align:left;cursor:pointer;
+    background:none;border:0;padding:11px 0;font-family:var(--ui);color:var(--ink);
+  }
+  .box{flex:none;width:21px;height:21px;border:2px solid var(--line);border-radius:6px;display:grid;place-items:center}
+  .box i{width:10px;height:6px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(1px,-1px);opacity:0}
+  .chk.done .box{background:var(--teal);border-color:var(--teal)}
+  .chk.done .box i{opacity:1}
+  .chk-txt{font-size:15.5px;font-weight:500}
+  .chk.done .chk-txt{color:var(--ink-3);text-decoration:line-through}
+  .chk-x{flex:none;background:none;border:0;cursor:pointer;color:var(--ink-3);font-size:19px;line-height:1;padding:7px 3px}
+  .chk-x:hover{color:var(--coral)}
+  .today-empty{font-family:var(--serif);font-size:13.5px;color:var(--ink-3);margin:4px 0 0}
 </style>
 
 <div class="wrap">
@@ -144,6 +166,21 @@
       </div>
       <button class="edit-btn" id="editbtn" type="button" aria-pressed="false">Edit</button>
     </div>
+    <section class="today">
+      <div class="today-head">
+        <div>
+          <h2 class="today-title">Today&rsquo;s shift</h2>
+          <p class="today-date" id="today-date"></p>
+        </div>
+        <span class="today-count" id="today-count"></span>
+      </div>
+      <div id="checks"></div>
+      <form class="addrow" id="checkform">
+        <input id="checkinput" placeholder="Add a task&hellip;" autocomplete="off" aria-label="Add a task">
+        <button class="btn" type="submit">Add</button>
+      </form>
+    </section>
+
     <div class="list" id="list"></div>
     <form class="addrow" id="addform">
       <input id="addinput" placeholder="Add a topic&hellip;" autocomplete="off" aria-label="Add a topic">
@@ -437,6 +474,103 @@
       }, function(){ dbRef = null; });
     }).catch(function(){ /* stays local */ });
   }
+})();
+</script>
+
+<script>
+(function(){
+  "use strict";
+
+  var CKEY = "fish-shift-checklist-v1";
+  var SEED = ["Pull the case", "Food prep", "Clean tables", "Fill the bleach"];
+  var st = {items: [], day: ""};
+  var $ = function(id){ return document.getElementById(id); };
+
+  function stamp(){
+    var d = new Date();
+    return d.getFullYear() + "-" + ("0" + (d.getMonth()+1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+  }
+  function label(){
+    try{ return new Date().toLocaleDateString(undefined, {weekday:"long", month:"long", day:"numeric"}); }
+    catch(e){ return stamp(); }
+  }
+  function save(){
+    try{ localStorage.setItem(CKEY, JSON.stringify(st)); }catch(e){ /* blocked storage */ }
+  }
+  function load(){
+    var seen = false;
+    try{
+      var raw = localStorage.getItem(CKEY);
+      if(raw){
+        var o = JSON.parse(raw);
+        if(o && Array.isArray(o.items)){
+          seen = true;
+          st.items = o.items
+            .filter(function(x){ return x && typeof x.text === "string"; })
+            .map(function(x){ return {text: x.text, done: !!x.done}; });
+          st.day = typeof o.day === "string" ? o.day : "";
+        }
+      }
+    }catch(e){ /* unreadable — start fresh */ }
+    if(!seen) st.items = SEED.map(function(t){ return {text: t, done: false}; });
+    // A new day reuses the same tasks with the ticks cleared.
+    if(st.day !== stamp()){
+      st.items.forEach(function(x){ x.done = false; });
+      st.day = stamp();
+    }
+    save();
+  }
+
+  function render(){
+    var box = $("checks");
+    box.textContent = "";
+    if(!st.items.length){
+      var e = document.createElement("p");
+      e.className = "today-empty";
+      e.textContent = "Nothing yet \u2014 add what you need to get done this shift.";
+      box.appendChild(e);
+    }
+    st.items.forEach(function(it){
+      var row = document.createElement("div");
+      row.className = "chk" + (it.done ? " done" : "");
+
+      var tog = document.createElement("button");
+      tog.type = "button"; tog.className = "chk-tog";
+      tog.setAttribute("aria-pressed", String(it.done));
+      var b = document.createElement("span"); b.className = "box";
+      b.appendChild(document.createElement("i"));
+      var tx = document.createElement("span"); tx.className = "chk-txt"; tx.textContent = it.text;
+      tog.appendChild(b); tog.appendChild(tx);
+      tog.addEventListener("click", function(){ it.done = !it.done; save(); render(); });
+
+      var x = document.createElement("button");
+      x.type = "button"; x.className = "chk-x"; x.textContent = "\u00d7";
+      x.setAttribute("aria-label", "Remove " + it.text);
+      x.addEventListener("click", function(){
+        st.items = st.items.filter(function(o){ return o !== it; });
+        save(); render();
+      });
+
+      row.appendChild(tog); row.appendChild(x);
+      box.appendChild(row);
+    });
+
+    var done = st.items.filter(function(x){ return x.done; }).length;
+    $("today-count").textContent = st.items.length ? done + "/" + st.items.length : "";
+    $("today-date").textContent = label();
+  }
+
+  $("checkform").addEventListener("submit", function(e){
+    e.preventDefault();
+    var inp = $("checkinput"), v = inp.value.trim();
+    if(!v) return;
+    st.items.push({text: v, done: false});
+    inp.value = "";
+    save(); render();
+  });
+
+  load();
+  render();
 })();
 </script>
 
